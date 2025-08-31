@@ -8,52 +8,57 @@
     <script src="/static/script.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
+    <div class="top-controls">
+        <button id="theme-toggle" class="control-btn">🌓</button>
+        <button id="lang-toggle" class="control-btn">ع</button>
+    </div>
+
     <div class="container">
         <header class="site-header">
-            <h1>User Finder</h1>
-            <p>The ultimate tool to find your perfect username.</p>
+            <h1 data-translate-key="pageTitle">User Finder</h1>
+            <p data-translate-key="pageSubtitle">The ultimate tool to find your perfect username.</p>
         </header>
 
         <div class="mode-selector">
-            <button class="mode-btn active" data-mode="smart">Smart Keyword</button>
-            <button class="mode-btn" data-mode="matrix">Matrix Check</button>
-            <button class="mode-btn" data-mode="random">Random</button>
+            <button class="mode-btn active" data-mode="smart" data-translate-key="smartModeBtn">Smart Keyword</button>
+            <button class="mode-btn" data-mode="matrix" data-translate-key="matrixModeBtn">Matrix Check</button>
+            <button class="mode-btn" data-mode="random" data-translate-key="randomModeBtn">Random</button>
         </div>
 
         <!-- Smart Keyword Mode Form -->
         <form id="smart-form" class="search-form active-form">
             <div class="input-group">
-                <input type="text" id="keyword" placeholder="Enter a keyword (e.g., your name)" required>
-                <input type="number" id="maxLength" placeholder="Max Length" min="3" max="20" value="15">
+                <input type="text" id="keyword" data-translate-key-placeholder="keywordPlaceholder" placeholder="Enter a keyword (e.g., your name)" required>
+                <input type="number" id="maxLength" data-translate-key-placeholder="maxLengthPlaceholder" placeholder="Max Length" min="3" max="20" value="15">
             </div>
             <div class="platform-pills">
                 <!-- Platforms will be injected by JS -->
             </div>
-            <button type="submit" class="submit-btn">Find Usernames</button>
+            <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
         </form>
 
         <!-- Matrix Check Mode Form -->
         <form id="matrix-form" class="search-form">
             <div class="input-group">
-                <input type="text" id="matrix-username" placeholder="Enter username to check everywhere" required>
+                <input type="text" id="matrix-username" data-translate-key-placeholder="matrixPlaceholder" placeholder="Enter username to check everywhere" required>
             </div>
-            <button type="submit" class="submit-btn">Check All Platforms</button>
+            <button type="submit" class="submit-btn" data-translate-key="checkAllBtn">Check All Platforms</button>
         </form>
 
         <!-- Random Mode Form -->
         <form id="random-form" class="search-form">
             <div class="input-group">
-                <input type="number" id="random-length" placeholder="Length" min="3" max="15" value="5">
-                <input type="number" id="random-count" placeholder="How many?" min="1" max="50" value="10">
+                <input type="number" id="random-length" data-translate-key-placeholder="lengthPlaceholder" placeholder="Length" min="3" max="15" value="5">
+                <input type="number" id="random-count" data-translate-key-placeholder="countPlaceholder" placeholder="How many?" min="1" max="50" value="10">
             </div>
             <div class="platform-pills">
                  <!-- Platforms will be injected by JS -->
             </div>
-            <button type="submit" class="submit-btn">Find Usernames</button>
+            <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
         </form>
 
         <div id="results-container" class="results-container"></div>
@@ -65,7 +70,7 @@
     </div>
 
     <footer class="site-footer-credit">
-        <p>Developed By Hussain Alkhatib</p>
+        <p data-translate-key="footerText">Developed With ❤️ By Hussain Alkhatib</p>
     </footer>
 
 </body>

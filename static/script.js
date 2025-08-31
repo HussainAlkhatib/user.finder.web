@@ -1,8 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- DICTIONARY FOR TRANSLATION ---
+    const translations = {
+        en: {
+            pageTitle: 'User Finder',
+            pageSubtitle: 'The ultimate tool to find your perfect username.',
+            smartModeBtn: 'Smart Keyword',
+            matrixModeBtn: 'Matrix Check',
+            randomModeBtn: 'Random',
+            keywordPlaceholder: 'Enter a keyword (e.g., your name)',
+            maxLengthPlaceholder: 'Max Length',
+            findUsernamesBtn: 'Find Usernames',
+            matrixPlaceholder: 'Enter username to check everywhere',
+            checkAllBtn: 'Check All Platforms',
+            lengthPlaceholder: 'Length',
+            countPlaceholder: 'How many?',
+            footerText: 'Developed With ❤️ By Hussain Alkhatib',
+            available: 'Available!',
+            taken: 'Taken',
+            noUsernamesFound: 'No available usernames found with these criteria.',
+            errorOccurred: 'An error occurred: '
+        },
+        ar: {
+            pageTitle: 'باحث اليوزرات',
+            pageSubtitle: 'الأداة المثالية لإيجاد اسم المستخدم المثالي لك.',
+            smartModeBtn: 'بحث ذكي بالكلمة',
+            matrixModeBtn: 'فحص شامل',
+            randomModeBtn: 'بحث عشوائي',
+            keywordPlaceholder: 'أدخل كلمة مفتاحية (مثل اسمك)',
+            maxLengthPlaceholder: 'أقصى طول',
+            findUsernamesBtn: 'ابحث عن يوزرات',
+            matrixPlaceholder: 'أدخل يوزر لفحصه في كل مكان',
+            checkAllBtn: 'افحص كل المنصات',
+            lengthPlaceholder: 'الطول',
+            countPlaceholder: 'العدد؟',
+            footerText: 'تم التطوير بحب ❤️ بواسطة حسين الخطيب',
+            available: 'متاح!',
+            taken: 'مأخوذ',
+            noUsernamesFound: 'لم يتم العثور على أي يوزرات متاحة بهذه المعايير.',
+            errorOccurred: 'حدث خطأ: '
+        }
+    };
+
     const PLATFORMS = ["TikTok", "Instagram", "GitHub", "Twitch", "Reddit", "Pinterest"];
 
     // --- Element Selections ---
+    const themeToggleButton = document.getElementById('theme-toggle');
+    const langToggleButton = document.getElementById('lang-toggle');
     const modeButtons = document.querySelectorAll('.mode-btn');
     const forms = {
         smart: document.getElementById('smart-form'),
@@ -12,14 +56,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const loadingOverlay = document.querySelector('.loading-overlay');
 
+    // --- State Management ---
     let activeMode = 'smart';
     let selectedPlatform = PLATFORMS[0];
+    let currentLang = 'en';
+    let currentTheme = 'light';
 
-    // --- Initialization ---
+    // --- THEME & LANGUAGE TOGGLE LOGIC ---
+    themeToggleButton.addEventListener('click', () => {
+        currentTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+        setTheme(currentTheme);
+        localStorage.setItem('theme', currentTheme);
+    });
+
+    langToggleButton.addEventListener('click', () => {
+        currentLang = document.documentElement.lang === 'ar' ? 'en' : 'ar';
+        setLanguage(currentLang);
+        localStorage.setItem('language', currentLang);
+    });
+
+    function setTheme(theme) {
+        document.body.classList.toggle('dark-mode', theme === 'dark');
+        themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌓';
+    }
+
+    function setLanguage(lang) {
+        const html = document.documentElement;
+        html.lang = lang;
+        html.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        langToggleButton.textContent = lang === 'ar' ? 'En' : 'ع';
+
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.dataset.translateKey;
+            el.textContent = translations[lang][key];
+        });
+
+        document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+            const key = el.dataset.translateKeyPlaceholder;
+            el.placeholder = translations[lang][key];
+        });
+    }
+
+    // --- INITIALIZATION ---
+    function initialize() {
+        // Load saved settings
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedLang = localStorage.getItem('language') || 'en';
+        setTheme(savedTheme);
+        setLanguage(savedLang);
+
+        initializePlatformPills();
+        updateActiveMode();
+    }
+
     function initializePlatformPills() {
         const pillContainers = document.querySelectorAll('.platform-pills');
         pillContainers.forEach(container => {
-            container.innerHTML = ''; // Clear existing
+            container.innerHTML = '';
             PLATFORMS.forEach(platform => {
                 const pill = document.createElement('div');
                 pill.className = 'platform-pill';
@@ -45,11 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         container.addEventListener('click', (e) => {
             if (e.target.classList.contains('platform-pill')) {
                 selectedPlatform = e.target.dataset.platform;
-                // Update all pill containers
-                document.querySelectorAll('.platform-pills').forEach(p => {
-                    p.querySelectorAll('.platform-pill').forEach(pill => {
-                        pill.classList.toggle('selected', pill.dataset.platform === selectedPlatform);
-                    });
+                document.querySelectorAll('.platform-pills .platform-pill').forEach(pill => {
+                    pill.classList.toggle('selected', pill.dataset.platform === selectedPlatform);
                 });
             }
         });
@@ -59,15 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
     forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
     forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
 
-    // --- UI Update Functions ---
     function updateActiveMode() {
         modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === activeMode));
         Object.values(forms).forEach(form => form.classList.remove('active-form'));
         forms[activeMode].classList.add('active-form');
-        resultsContainer.innerHTML = ''; // Clear results on mode change
+        resultsContainer.innerHTML = '';
     }
 
-    // --- Core Logic ---
+    // --- API & RENDERING LOGIC ---
     async function handleFormSubmit(event, mode) {
         event.preventDefault();
         loadingOverlay.style.display = 'flex';
@@ -109,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Rendering Functions ---
     function renderResults(data, mode) {
         if (mode === 'matrix') {
             renderMatrixResults(data);
@@ -120,13 +208,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderListResults(usernames) {
         if (usernames.length === 0) {
-            resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">No available usernames found with these criteria.</p></div>`;
+            resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
             return;
         }
         usernames.forEach(user => {
             const card = document.createElement('div');
             card.className = 'result-card';
-            card.innerHTML = `<span class="username">${user}</span><span class="status-available">Available!</span>`;
+            card.innerHTML = `<span class="username">${user}</span><span class="status-available">${translations[currentLang].available}</span>`;
             resultsContainer.appendChild(card);
         });
     }
@@ -137,17 +225,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'matrix-result-card';
             const statusClass = isAvailable ? 'status-available' : 'status-taken';
-            const statusText = isAvailable ? 'Available!' : 'Taken';
+            const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
             card.innerHTML = `<span class="platform-name">${platform}</span><span class="${statusClass}">${statusText}</span>`;
             resultsContainer.appendChild(card);
         });
     }
 
     function renderError(error) {
-        resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">An error occurred: ${error.message}</p></div>`;
+        resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
     }
 
-    // --- Initial Run ---
-    initializePlatformPills();
-    updateActiveMode();
+    // --- Start the application ---
+    initialize();
 });
