@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: user-finder-web
+    env: python
+    plan: free # You can change this later if you want to upgrade
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4 # A recent and stable Python version
