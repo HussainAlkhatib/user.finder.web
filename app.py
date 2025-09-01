@@ -1,50 +1,10 @@
 from flask import Flask, render_template, request, jsonify
-import requests
-import random
-import string
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Import shared logic from the new core module
+from core import check_username, generate_smart_variations, PLATFORMS
+
 app = Flask(__name__)
-
-# =================================================================================
-#  CORE CHECKING LOGIC
-# =================================================================================
-
-PLATFORMS = {
-    "TikTok": {"name": "TikTok", "url_template": "https://www.tiktok.com/@{}"},
-    "Instagram": {"name": "Instagram", "url_template": "https://www.instagram.com/{}/"},
-    "GitHub": {"name": "GitHub", "url_template": "https://www.github.com/{}"},
-    "Twitch": {"name": "Twitch", "url_template": "https://www.twitch.tv/{}"},
-    "Reddit": {"name": "Reddit", "url_template": "https://www.reddit.com/user/{}"},
-    "Pinterest": {"name": "Pinterest", "url_template": "https://www.pinterest.com/{}/"},
-}
-
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-}
-
-def check_username(username, platform_info):
-    url = platform_info["url_template"].format(username)
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=3)
-        if response.status_code == 404:
-            return username
-    except requests.exceptions.RequestException:
-        pass
-    return None
-
-def generate_smart_variations(keyword, max_length):
-    variations = {keyword}
-    leetspeak = {'a': '4', 'e': '3', 'o': '0', 'l': '1', 's': '5', 't': '7'}
-    leet_word = ''.join([leetspeak.get(char.lower(), char) for char in keyword])
-    if leet_word != keyword: variations.add(leet_word)
-    suffixes = ['_tv', '_gg', '_pro', 'x', 'yt', 'dev', 'xd', 'gaming']
-    prefixes = ['pro_', 'im', 'the_', 'real_', 'its']
-    for s in suffixes: variations.add(f"{keyword}{s}")
-    for p in prefixes: variations.add(f"{p}{keyword}")
-    variations.add(keyword + keyword[-1])
-    for _ in range(50): variations.add(f"{keyword}{random.randint(1,999)}")
-    return [v for v in variations if len(v) <= max_length]
 
 # =================================================================================
 #  FLASK API ENDPOINTS
@@ -53,6 +13,11 @@ def generate_smart_variations(keyword, max_length):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/platforms')
+def api_platforms():
+    # New endpoint to provide the list of supported platforms to the frontend
+    return jsonify(list(PLATFORMS.keys()))
 
 @app.route('/api/check', methods=['POST'])
 def api_check():
@@ -78,6 +43,7 @@ def api_check():
             if mode == 'random':
                 length = int(data.get('length', 5))
                 count = int(data.get('count', 10))
+                import random, string # Keep local imports if only used here
                 usernames_to_check = {''.join(random.choices(string.ascii_lowercase + string.digits, k=length)) for _ in range(count * 20)}
             
             elif mode == 'smart':

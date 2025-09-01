@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = {
         en: {
             pageTitle: 'User Finder',
-            pageSubtitle: 'The ultimate tool to find your perfect username.',
+            pageSubtitle: 'The tool is free',
             smartModeBtn: 'Smart Keyword',
             matrixModeBtn: 'Matrix Check',
             randomModeBtn: 'Random',
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ar: {
             pageTitle: 'باحث اليوزرات',
-            pageSubtitle: 'الأداة المثالية لإيجاد اسم المستخدم المثالي لك.',
+            pageSubtitle: 'الأداة مجانية',
             smartModeBtn: 'بحث ذكي بالكلمة',
             matrixModeBtn: 'فحص شامل',
             randomModeBtn: 'بحث عشوائي',
@@ -42,8 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const PLATFORMS = ["TikTok", "Instagram", "GitHub", "Twitch", "Reddit", "Pinterest"];
-
     // --- Element Selections ---
     const themeToggleButton = document.getElementById('theme-toggle');
     const langToggleButton = document.getElementById('lang-toggle');
@@ -58,7 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Management ---
     let activeMode = 'smart';
-    let selectedPlatform = PLATFORMS[0];
+    let availablePlatforms = [];
+    let selectedPlatform = '';
     let currentLang = 'en';
     let currentTheme = 'light';
 
@@ -98,22 +97,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- INITIALIZATION ---
-    function initialize() {
+    async function initialize() {
         // Load saved settings
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedLang = localStorage.getItem('language') || 'en';
         setTheme(savedTheme);
         setLanguage(savedLang);
 
-        initializePlatformPills();
-        updateActiveMode();
+        try {
+            const response = await fetch('/api/platforms');
+            availablePlatforms = await response.json();
+            if (availablePlatforms.length > 0) {
+                selectedPlatform = availablePlatforms[0];
+            }
+            initializePlatformPills();
+            updateActiveMode();
+        } catch (error) {
+            console.error("Failed to fetch platforms:", error);
+        }
     }
 
     function initializePlatformPills() {
         const pillContainers = document.querySelectorAll('.platform-pills');
-        pillContainers.forEach(container => {
-            container.innerHTML = '';
-            PLATFORMS.forEach(platform => {
+        pillContainers.forEach(container => { container.innerHTML = ''; availablePlatforms.forEach(platform => {
                 const pill = document.createElement('div');
                 pill.className = 'platform-pill';
                 pill.textContent = platform;
