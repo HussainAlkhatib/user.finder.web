@@ -3,67 +3,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = {
         en: {
             pageTitle: 'User Finder',
-            pageSubtitle: 'All in One web.',
+            pageSubtitle: 'Your All-in-One Identity Search',
             smartModeBtn: 'Smart Search',
             matrixModeBtn: 'Matrix Check',
-            randomModeBtn: 'Random Finder',
+            domainModeBtn: 'Domain Search',
             keywordPlaceholder: 'Enter a keyword...',
             maxLengthPlaceholder: 'Max Len',
-            findUsernamesBtn: 'Find Usernames & Domains',
+            matrixPlaceholder: 'Enter username to check',
+            domainPlaceholder: 'Enter keyword for domains',
+            findUsernamesBtn: 'Find Usernames',
             checkAllBtn: 'Check All Platforms',
+            domainFindBtn: 'Find Domains',
             footerText: 'Developed By Hussain Alkhatib',
+            githubLink: 'GitHub',
             available: 'Available!',
             taken: 'Taken',
+            errorOccurred: 'An error occurred: ',
             noUsernamesFound: 'No available usernames found. Try different criteria!',
             noDomainsFound: 'No available domains found for this keyword.',
-            errorOccurred: 'An error occurred: ',
-            selectAll: 'Select All',
-            historyTitle: 'Recent Searches',
-            statsTitle: 'Search Complete!',
-            found: 'Found',
-            in: 'in',
-            seconds: 'seconds',
-            usernamesTab: 'Usernames',
-            domainsTab: 'Domains',
-            exportBtn: 'Export',
+            resultsTitle: 'Results',
+            chatTitle: 'Najm Assistant',
+            chatWelcome: 'Hello! I\'m Najm, your AI assistant. How can I help you find the perfect digital identity today?',
+            chatPlaceholder: 'Ask Najm...',
+            chatSend: 'Send',
             quality: 'Quality',
-            deselectAll: 'Deselect All'
+            selectAll: 'Select All',
+            deselectAll: 'Deselect All',
         },
         ar: {
             pageTitle: 'باحث اليوزرات',
-            pageSubtitle: 'الكل في واحد.',
+            pageSubtitle: 'بحثك المتكامل عن الهوية الرقمية',
             smartModeBtn: 'بحث ذكي',
             matrixModeBtn: 'فحص شامل',
-            randomModeBtn: 'بحث عشوائي',
+            domainModeBtn: 'بحث النطاقات',
             keywordPlaceholder: 'أدخل كلمة مفتاحية...',
             maxLengthPlaceholder: 'أقصى طول',
-            findUsernamesBtn: 'ابحث عن يوزرات ودومينات',
+            matrixPlaceholder: 'أدخل اسم مستخدم للتحقق منه',
+            domainPlaceholder: 'أدخل كلمة مفتاحية للنطاقات',
+            findUsernamesBtn: 'ابحث عن يوزرات',
             checkAllBtn: 'افحص كل المنصات',
+            domainFindBtn: 'ابحث عن نطاقات',
             footerText: 'تم التطوير بواسطة حسين الخطيب',
+            githubLink: 'GitHub',
             available: 'متاح!',
             taken: 'مأخوذ',
-            noUsernamesFound: 'لم يتم العثور على يوزرات. جرب معايير مختلفة!',
-            noDomainsFound: 'لم يتم العثور على دومينات متاحة لهذه الكلمة.',
             errorOccurred: 'حدث خطأ: ',
-            selectAll: 'تحديد الكل',
-            historyTitle: 'عمليات البحث الأخيرة',
-            statsTitle: 'اكتمل البحث!',
-            found: 'تم العثور على',
-            in: 'في',
-            seconds: 'ثواني',
-            usernamesTab: 'أسماء المستخدمين',
-            domainsTab: 'الدومينات',
-            exportBtn: 'تصدير',
+            noUsernamesFound: 'لم يتم العثور على أسماء مستخدمين متاحة. جرب معايير مختلفة!',
+            noDomainsFound: 'لم يتم العثور على نطاقات متاحة لهذه الكلمة.',
+            resultsTitle: 'النتائج',
+            chatTitle: 'مساعدك نجم',
+            chatWelcome: 'أهلاً بك! أنا نجم، مساعدك الذكي. كيف يمكنني مساعدتك في العثور على هويتك الرقمية المثالية اليوم؟',
+            chatPlaceholder: 'اسأل نجم...',
+            chatSend: 'أرسل',
             quality: 'الجودة',
+            selectAll: 'تحديد الكل',
             deselectAll: 'إلغاء تحديد الكل',
-            forecastTitle: '🔮 توقع اسم المستخدم',
-            forecastSubtitle: 'تنبأ بمدى توفر اسم المستخدم في المستقبل.',
-            forecastPlaceholder: 'أدخل اسم مستخدم للتوقع...',
-            forecastButton: 'توقّع',
-            domainModeBtn: 'بحث النطاقات',
-            forecastModeBtn: 'وضع التوقع',
-            domainPlaceholder: 'أدخل كلمة مفتاحية للنطاقات...',
-            domainFindBtn: 'ابحث عن نطاقات'
         }
     };
 
@@ -75,21 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
         smart: document.getElementById('smart-form'),
         matrix: document.getElementById('matrix-form'),
         domain: document.getElementById('domain-form'),
-        forecast: document.getElementById('forecast-form')
     };
     const loadingOverlay = document.querySelector('.loading-overlay');
-    
     const resultsArea = document.getElementById('results-area');
-    const statsContainer = document.getElementById('stats-container');
     const resultsContent = document.getElementById('results-content');
-    const historyContainer = document.getElementById('history-container');
-    const exportBtn = document.getElementById('export-btn');
 
     // --- State Management ---
     let activeMode = 'smart';
-    let availablePlatforms = [];
     let currentLang = 'en';
-    let lastUsernamesResult = [];
+    let availablePlatforms = [];
 
     // --- INITIALIZATION ---
     async function initialize() {
@@ -99,16 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
         setLanguage(savedLang);
 
         try {
-            const response = await fetch('/api/platforms');
-            availablePlatforms = await response.json();
-            initializePlatformSelectors();
+            const [platformsRes, vibesRes] = await Promise.all([
+                fetch('/api/platforms'),
+                fetch('/api/vibes')
+            ]);
+            availablePlatforms = await platformsRes.json();
+            const availableVibes = await vibesRes.json();
+            initializePlatformSelector();
+            initializeVibeSelector(availableVibes);
         } catch (error) {
-            console.error("Failed to fetch platforms:", error);
+            console.error("Failed to fetch initial data:", error);
         }
         
         updateActiveMode();
-        loadHistory();
         setupEventListeners();
+        initializeChatWidget();
     }
 
     // --- EVENT LISTENERS SETUP ---
@@ -137,8 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 forms[mode].addEventListener('submit', e => handleFormSubmit(e, mode));
             }
         }
-
-        exportBtn.addEventListener('click', exportResults);
     }
 
     // --- THEME & LANGUAGE ---
@@ -152,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         langToggleButton.textContent = lang === 'ar' ? 'En' : 'ع';
+        
         document.querySelectorAll('[data-translate-key]').forEach(el => {
             const key = el.dataset.translateKey;
             if (translations[lang][key]) el.textContent = translations[lang][key];
@@ -163,13 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- UI & FORM LOGIC ---
-    function initializePlatformSelectors() {
+    function initializePlatformSelector() {
         const container = document.getElementById('smart-platform-selector');
         if (!container) return;
         container.innerHTML = `
             <div class="platform-selector-header">
-                <button class="platform-control-btn select-all-btn" data-translate-key="selectAll">${translations[currentLang].selectAll}</button>
-                <button class="platform-control-btn deselect-all-btn" data-translate-key="deselectAll">${translations[currentLang].deselectAll || 'Deselect All'}</button>
+                <button type="button" class="platform-control-btn select-all-btn">${translations[currentLang].selectAll}</button>
+                <button type="button" class="platform-control-btn deselect-all-btn">${translations[currentLang].deselectAll}</button>
             </div>
             <div class="platform-grid"></div>`;
         const grid = container.querySelector('.platform-grid');
@@ -187,6 +179,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function initializeVibeSelector(vibes) {
+        const selector = document.getElementById('vibe-selector');
+        if (!selector) return;
+        selector.innerHTML = ''; // Clear existing options
+        for (const vibe in vibes) {
+            const option = document.createElement('option');
+            option.value = vibe;
+            option.textContent = vibe.charAt(0).toUpperCase() + vibe.slice(1);
+            selector.appendChild(option);
+        }
+    }
+
     function updateActiveMode() {
         modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === activeMode));
         Object.values(forms).forEach(form => form.classList.remove('active-form'));
@@ -202,38 +206,23 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay.style.display = 'flex';
         resultsArea.style.display = 'none';
         resultsContent.innerHTML = '';
-        statsContainer.innerHTML = '';
-        const startTime = Date.now();
 
         let payload = { mode };
+        let endpoint = '/api/check';
 
-        // Handle forecast mode separately as it's frontend-only
-        if (mode === 'forecast') {
-            const input = document.getElementById('forecast-input');
-            const username = input.value.trim();
-            if (username) {
-                renderForecastResult(username);
-                saveSearchToHistory({ mode, username });
-            }
-            loadingOverlay.style.display = 'none';
-            return;
-        }
-
-        // Setup payload for backend modes
         if (mode === 'smart') {
             payload.keyword = document.getElementById('keyword').value;
             payload.maxLength = document.getElementById('maxLength').value;
+            payload.vibe = document.getElementById('vibe-selector').value;
             payload.platforms = Array.from(document.querySelectorAll(`#smart-platform-selector input[name="platform"]:checked`)).map(chk => chk.value);
         } else if (mode === 'matrix') {
             payload.username = document.getElementById('matrix-username').value;
         } else if (mode === 'domain') {
             payload.keyword = document.getElementById('domain-keyword').value;
+            endpoint = '/api/check_domains';
         }
 
-        saveSearchToHistory(payload);
-
         try {
-            const endpoint = (mode === 'domain') ? '/api/check_domains' : '/api/check';
             const response = await fetch(endpoint, { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
@@ -246,9 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            const endTime = Date.now();
             resultsArea.style.display = 'block';
-            renderResults(data, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(data) ? data.length : Object.keys(data).length });
+            renderResults(data, mode);
 
         } catch (error) {
             renderError(error);
@@ -257,13 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---RENDERING ---
-    function renderResults(data, mode, stats) {
-        renderStats(stats, mode);
+    // --- RENDERING ---
+    function renderResults(data, mode) {
         resultsContent.innerHTML = ''; // Clear previous results
 
         if (mode === 'smart') {
-            lastUsernamesResult = data; // Save for export
             renderGroupedListResults(data);
         } else if (mode === 'matrix') {
             renderMatrixResults(data);
@@ -272,18 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderStats(stats, mode) {
-        if (mode === 'matrix' || mode === 'forecast') {
-            statsContainer.innerHTML = '';
-            return;
-        }
-        const itemType = mode === 'domain' ? (currentLang === 'ar' ? 'نطاقات' : 'domains') : (currentLang === 'ar' ? 'يوزرات' : 'usernames');
-        statsContainer.innerHTML = `<div class="stats-card"><h3>${translations[currentLang].statsTitle}</h3><p>${translations[currentLang].found} <strong>${stats.count}</strong> ${itemType} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p></div>`;
-    }
-
     function renderGroupedListResults(results) {
         if (results.length === 0) {
-            resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
+            resultsContent.innerHTML = `<div class="result-card-plain"><p>${translations[currentLang].noUsernamesFound}</p></div>`;
             return;
         }
         const grouped = results.reduce((acc, { platform, username, quality }) => {
@@ -294,10 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const sortedUsernames = Object.keys(grouped).sort((a, b) => grouped[b].quality - grouped[a].quality || a.localeCompare(b));
 
+        resultsContent.innerHTML = ''; // Clear previous results
         sortedUsernames.forEach(username => {
             const { platforms, quality } = grouped[username];
             const card = document.createElement('div');
-            card.className = 'result-card';
+            card.className = 'result-card-smart';
             const platformHtml = platforms.map(p => `<span class="platform-tag">${p}</span>`).join('');
             card.innerHTML = `
                 <div class="username-section">
@@ -306,28 +284,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="quality-section">
                     <span class="quality-text">${translations[currentLang].quality}</span>
-                    <div class="stars">
-                        ${'★'.repeat(quality)}
-                        ${'☆'.repeat(5 - quality)}
-                    </div>
+                    <div class="stars">${'★'.repeat(quality)}${'☆'.repeat(5 - quality)}</div>
                 </div>`;
             resultsContent.appendChild(card);
         });
     }
 
     function renderDomainResults(domains) {
-        const sortedDomains = Object.entries(domains).sort((a, b) => a[0].localeCompare(b[0]));
-        if (sortedDomains.length === 0 || sortedDomains.every(d => !d[1])) {
-            resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noDomainsFound}</p></div>`;
+        const availableDomains = Object.entries(domains).filter(([_, isAvailable]) => isAvailable);
+        if (availableDomains.length === 0) {
+            resultsContent.innerHTML = `<div class="result-card-plain"><p>${translations[currentLang].noDomainsFound}</p></div>`;
             return;
         }
-        sortedDomains.forEach(([domain, isAvailable]) => {
-            if (!isAvailable) return; // Only show available domains
+        availableDomains.forEach(([domain, _]) => {
             const card = document.createElement('div');
-            card.className = 'matrix-result-card';
-            const statusClass = 'status-available';
-            const statusText = translations[currentLang].available;
-            card.innerHTML = `<span class="platform-name">${domain}</span><span class="${statusClass}">${statusText}</span>`;
+            card.className = 'result-card-matrix';
+            card.innerHTML = `<span class="platform-name">${domain}</span><span class="status-available">${translations[currentLang].available}</span>`;
             resultsContent.appendChild(card);
         });
     }
@@ -336,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedPlatforms = Object.entries(platforms).sort((a, b) => a[0].localeCompare(b[0]));
         sortedPlatforms.forEach(([platform, isAvailable]) => {
             const card = document.createElement('div');
-            card.className = 'matrix-result-card';
+            card.className = 'result-card-matrix';
             const statusClass = isAvailable ? 'status-available' : 'status-taken';
             const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
             card.innerHTML = `<span class="platform-name">${platform}</span><span class="${statusClass}">${statusText}</span>`;
@@ -344,125 +316,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function renderForecastResult(username) {
-        resultsArea.style.display = 'block';
-        statsContainer.innerHTML = '';
-        const randomChance = Math.floor(Math.random() * 51) + 50; // 50-100%
-        const text = `There is a ${randomChance}% chance that "${username}" will be taken within a year!`;
-        resultsContent.innerHTML = `<div class="result-card"><p class="status-available">${text}</p></div>`;
-    }
-
     function renderError(error) {
         resultsArea.style.display = 'block';
-        statsContainer.innerHTML = '';
-        resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
+        resultsContent.innerHTML = `<div class="result-card-plain"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
     }
-
-    // --- HISTORY & EXPORT ---
-    function saveSearchToHistory(payload) {
-        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-        if (JSON.stringify(history[0]) === JSON.stringify(payload)) return;
-        history.unshift(payload);
-        history = history.slice(0, 5);
-        localStorage.setItem('searchHistory', JSON.stringify(history));
-        loadHistory();
-    }
-
-    function loadHistory() {
-        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-        historyContainer.innerHTML = '';
-        if (history.length === 0) return;
-        const title = document.createElement('h3');
-        title.textContent = translations[currentLang].historyTitle;
-        historyContainer.appendChild(title);
-        history.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'history-card';
-            let text = `<strong>${item.mode}:</strong> `;
-            if(item.keyword) text += `${item.keyword}, `;
-            if(item.username) text += `${item.username}, `;
-            if(item.platforms) text += `[${item.platforms.join(', ')}]`;
-            card.innerHTML = text;
-            card.addEventListener('click', () => repopulateForm(item));
-            historyContainer.appendChild(card);
-        });
-    }
-
-    function repopulateForm(item) {
-        activeMode = item.mode;
-        updateActiveMode();
-        if (item.mode === 'smart') {
-            document.getElementById('keyword').value = item.keyword;
-            document.getElementById('maxLength').value = item.maxLength;
-            document.querySelectorAll('#smart-platform-selector input[name="platform"]').forEach(chk => {
-                chk.checked = item.platforms.includes(chk.value);
-            });
-        } else if (item.mode === 'matrix') {
-            document.getElementById('matrix-username').value = item.username;
-        } else if (item.mode === 'domain') {
-            document.getElementById('domain-keyword').value = item.keyword;
-        } else if (item.mode === 'forecast') {
-            document.getElementById('forecast-input').value = item.username;
-        }
-    }
-
-    function exportResults() {
-        if (lastUsernamesResult.length === 0) {
-            alert("No results to export.");
-            return;
-        }
-        const grouped = lastUsernamesResult.reduce((acc, { platform, username, quality }) => {
-            if (!acc[username]) acc[username] = { platforms: [], quality: quality };
-            acc[username].platforms.push(platform);
-            return acc;
-        }, {});
-        let textContent = "Available Usernames Report\n============================\n\n";
-        Object.entries(grouped).forEach(([username, { platforms, quality }]) => {
-            textContent += `Username: ${username}\n`;
-            textContent += `Quality: ${'★'.repeat(quality)}${'☆'.repeat(5 - quality)}\n`;
-            textContent += `Available on: ${platforms.join(', ')}\n\n`;
-        });
-        const blob = new Blob([textContent], { type: 'text/plain' });
-        const anchor = document.createElement('a');
-        anchor.download = 'user-finder-results.txt';
-        anchor.href = window.URL.createObjectURL(blob);
-        anchor.click();
-        window.URL.revokeObjectURL(anchor.href);
-    }
-
-    // --- Start the application ---
-    initialize();
 
     // --- NAJM AI Chat Widget Logic ---
-    const najmAiButton = document.getElementById('najm-ai-button');
-    const closeChatButton = document.getElementById('close-chat-btn');
-    const chatWidget = document.getElementById('najm-chat-widget');
-
-    if (najmAiButton && closeChatButton && chatWidget) {
-        najmAiButton.addEventListener('click', () => {
-            chatWidget.classList.toggle('visible');
-        });
-
-        closeChatButton.addEventListener('click', () => {
-            chatWidget.classList.remove('visible');
-        });
-
+    function initializeChatWidget() {
+        const najmAiButton = document.getElementById('najm-ai-button');
+        const closeChatButton = document.getElementById('close-chat-btn');
+        const chatWidget = document.getElementById('najm-chat-widget');
         const chatInput = document.getElementById('chat-input');
         const sendChatButton = document.getElementById('send-chat-btn');
         const chatBody = document.querySelector('.chat-widget .chat-body');
+
+        if (!najmAiButton) return;
+
+        najmAiButton.addEventListener('click', () => chatWidget.classList.toggle('visible'));
+        closeChatButton.addEventListener('click', () => chatWidget.classList.remove('visible'));
 
         const handleChatMessage = async () => {
             const message = chatInput.value.trim();
             if (!message) return;
 
-            // Render user message
             appendMessage(message, 'user');
             chatInput.value = '';
-
-            // Show typing indicator
             const typingIndicator = appendMessage('...', 'bot', true);
 
-            // Call API
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST', 
@@ -470,8 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ message })
                 });
                 const data = await response.json();
-                typingIndicator.remove(); // Remove typing indicator
-                appendMessage(data.reply, 'bot'); // Render bot reply
+                typingIndicator.remove();
+                appendMessage(data.reply, 'bot');
             } catch (error) {
                 typingIndicator.remove();
                 appendMessage("Sorry, I'm having trouble connecting. Please try again later.", 'bot');
@@ -481,20 +361,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const appendMessage = (text, type, isTyping = false) => {
             const messageElement = document.createElement('div');
             messageElement.className = `chat-message ${type}`;
-            if (isTyping) {
-                messageElement.classList.add('typing');
-            }
-            messageElement.innerHTML = `<p>${text}</p>`;
+            if (isTyping) messageElement.classList.add('typing');
+            messageElement.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`;
             chatBody.appendChild(messageElement);
-            chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom
+            chatBody.scrollTop = chatBody.scrollHeight;
             return messageElement;
         };
 
         sendChatButton.addEventListener('click', handleChatMessage);
         chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleChatMessage();
-            }
+            if (e.key === 'Enter') handleChatMessage();
         });
     }
+
+    // --- Start the application ---
+    initialize();
 });

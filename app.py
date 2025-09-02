@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
+from dotenv import load_dotenv
+import requests
 
 from core import (
     check_username, 
@@ -11,7 +14,12 @@ from core import (
     VIBE_WORDS
 )
 
+# --- Initialization ---
+load_dotenv()
 app = Flask(__name__)
+
+# Define the Hugging Face model we want to use
+HUGGINGFACE_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
 
 @app.route('/')
 def index():
@@ -59,14 +67,9 @@ def api_check():
             if mode == 'smart':
                 keyword = data.get('keyword')
                 max_len = int(data.get('maxLength', 15))
-                vibe = data.get('vibe', 'default') # Get the vibe, default to none
+                vibe = data.get('vibe', 'default')
                 if not keyword: return jsonify({"error": "Keyword is required"}), 400
                 usernames_to_check = set(generate_smart_variations(keyword, max_len, vibe))
-            elif mode == 'random':
-                length = int(data.get('length', 5))
-                count = int(data.get('count', 10))
-                import random, string
-                usernames_to_check = {''.join(random.choices(string.ascii_lowercase + string.digits, k=length)) for _ in range(count * 20)}
             else:
                 return jsonify({"error": "Invalid mode"}), 400
 
@@ -90,20 +93,44 @@ def api_check():
 
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    data = request.json
-    message = data.get('message', '').lower()
+    api_key = os.getenv("HUGGINGFACE_API_KEY")
+    if not api_key or 'PUT_YOUR_API_KEY_HERE' in api_key:
+        return jsonify({"reply": "The Hugging Face API key is not configured. Please set it in the .env file."}), 500
 
-    # Simple rule-based responses
-    if 'suggest' in message or 'username' in message or 'name' in message:
-        reply = "I can help with that! Try using the 'Smart Search' mode. Just enter a keyword and I can generate some ideas for you."
-    elif 'hello' in message or 'hi' in message:
-        reply = "Hello! How can I assist you in finding the perfect username today?"
-    elif 'domain' in message:
-        reply = "Looking for a domain? Switch to the 'Domain Search' mode to check for available domains based on your keyword."
-    else:
-        reply = "I can help you find available usernames and domains. Try asking me for suggestions or use one of the search modes!"
-    
-    return jsonify({"reply": reply})
+    data = request.json
+    message = data.get('message', '')
+    if not message:
+        return jsonify({"reply": "I can't respond to an empty message!"})
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    prompt = f"You are Najm, a helpful and friendly AI assistant for a username finder website. Your goal is to help users find cool usernames. Keep your answers short and helpful. User's message: '{message}'"
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 100, # Limit response length
+            "return_full_text": False # Return only the generated response
+        }
+    }
+
+    try:
+        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=20)
+        response.raise_for_status() # Raise an exception for bad status codes
+        result = response.json()
+        
+        # Extract the generated text, handling potential variations in the response structure
+        reply = result[0].get('generated_text', "Sorry, I couldn't generate a proper response.").strip()
+        
+        return jsonify({"reply": reply})
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Hugging Face API error: {e}")
+        # Check for specific error messages from the API if available
+        error_details = e.response.json() if e.response else {}
+        if "is currently loading" in error_details.get("error", ""):
+            return jsonify({"reply": "I'm just warming up! Please try again in a moment."}), 503
+        return jsonify({"reply": "Sorry, I'm having trouble connecting to the AI service. Please try again later."}), 500
+    except Exception as e:
+        app.logger.error(f"An unexpected error in chat API: {e}")
+        return jsonify({"reply": "Sorry, an unexpected error occurred."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
