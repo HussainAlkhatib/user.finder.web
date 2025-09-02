@@ -1,44 +1,63 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- DICTIONARY FOR TRANSLATION ---
     const translations = {
         en: {
-            pageTitle: 'User Finder',
-            pageSubtitle: 'The tool is free',
-            smartModeBtn: 'Smart Keyword',
+            pageTitle: 'User Finder Pro',
+            pageSubtitle: 'Discover available usernames across all major platforms.',
+            smartModeBtn: 'Smart Search',
             matrixModeBtn: 'Matrix Check',
-            randomModeBtn: 'Random',
-            keywordPlaceholder: 'Enter a keyword (e.g., your name)',
-            maxLengthPlaceholder: 'Max Length',
+            randomModeBtn: 'Random Finder',
+            keywordPlaceholder: 'Enter a keyword...',
+            maxLengthPlaceholder: 'Max Len',
             findUsernamesBtn: 'Find Usernames',
-            matrixPlaceholder: 'Enter username to check everywhere',
             checkAllBtn: 'Check All Platforms',
             lengthPlaceholder: 'Length',
             countPlaceholder: 'How many?',
             footerText: 'Developed By Hussain Alkhatib',
             available: 'Available!',
             taken: 'Taken',
-            noUsernamesFound: 'No available usernames found with these criteria.',
-            errorOccurred: 'An error occurred: '
+            noUsernamesFound: 'No available usernames found. Try different criteria!',
+            errorOccurred: 'An error occurred: ',
+            advancedToggle: 'Advanced Options',
+            startsWithPlaceholder: 'Starts with...',
+            endsWithPlaceholder: 'Ends with...',
+            includeNumbersLabel: 'Numbers',
+            includeLettersLabel: 'Letters',
+            selectAll: 'Select All',
+            historyTitle: 'Recent Searches',
+            statsTitle: 'Search Complete!',
+            found: 'Found',
+            in: 'in',
+            seconds: 'seconds'
         },
         ar: {
-            pageTitle: 'باحث اليوزرات',
-            pageSubtitle: 'الأداة مجانية',
-            smartModeBtn: 'بحث ذكي بالكلمة',
+            pageTitle: 'باحث اليوزرات الاحترافي',
+            pageSubtitle: 'اكتشف اليوزرات المتاحة في جميع المنصات الكبرى.',
+            smartModeBtn: 'بحث ذكي',
             matrixModeBtn: 'فحص شامل',
             randomModeBtn: 'بحث عشوائي',
-            keywordPlaceholder: 'أدخل كلمة مفتاحية (مثل اسمك)',
+            keywordPlaceholder: 'أدخل كلمة مفتاحية...',
             maxLengthPlaceholder: 'أقصى طول',
             findUsernamesBtn: 'ابحث عن يوزرات',
-            matrixPlaceholder: 'أدخل يوزر لفحصه في كل مكان',
             checkAllBtn: 'افحص كل المنصات',
             lengthPlaceholder: 'الطول',
             countPlaceholder: 'العدد؟',
             footerText: 'تم التطوير بواسطة حسين الخطيب',
             available: 'متاح!',
             taken: 'مأخوذ',
-            noUsernamesFound: 'لم يتم العثور على أي يوزرات متاحة بهذه المعايير.',
-            errorOccurred: 'حدث خطأ: '
+            noUsernamesFound: 'لم يتم العثور على يوزرات. جرب معايير مختلفة!',
+            errorOccurred: 'حدث خطأ: ',
+            advancedToggle: 'خيارات متقدمة',
+            startsWithPlaceholder: 'يبدأ بـ...',
+            endsWithPlaceholder: 'ينتهي بـ...',
+            includeNumbersLabel: 'أرقام',
+            includeLettersLabel: 'حروف',
+            selectAll: 'تحديد الكل',
+            historyTitle: 'عمليات البحث الأخيرة',
+            statsTitle: 'اكتمل البحث!',
+            found: 'تم العثور على',
+            in: 'في',
+            seconds: 'ثواني'
         }
     };
 
@@ -52,53 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
         random: document.getElementById('random-form')
     };
     const resultsContainer = document.getElementById('results-container');
+    const statsContainer = document.getElementById('stats-container');
+    const historyContainer = document.getElementById('history-container');
     const loadingOverlay = document.querySelector('.loading-overlay');
+    const advancedToggle = document.getElementById('advanced-toggle');
+    const advancedPanel = document.getElementById('advanced-panel');
 
     // --- State Management ---
     let activeMode = 'smart';
     let availablePlatforms = [];
-    let selectedPlatform = '';
     let currentLang = 'en';
-    let currentTheme = 'light';
-
-    // --- THEME & LANGUAGE TOGGLE LOGIC ---
-    themeToggleButton.addEventListener('click', () => {
-        currentTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-        setTheme(currentTheme);
-        localStorage.setItem('theme', currentTheme);
-    });
-
-    langToggleButton.addEventListener('click', () => {
-        currentLang = document.documentElement.lang === 'ar' ? 'en' : 'ar';
-        setLanguage(currentLang);
-        localStorage.setItem('language', currentLang);
-    });
-
-    function setTheme(theme) {
-        document.body.classList.toggle('dark-mode', theme === 'dark');
-        themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌓';
-    }
-
-    function setLanguage(lang) {
-        const html = document.documentElement;
-        html.lang = lang;
-        html.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        langToggleButton.textContent = lang === 'ar' ? 'En' : 'ع';
-
-        document.querySelectorAll('[data-translate-key]').forEach(el => {
-            const key = el.dataset.translateKey;
-            el.textContent = translations[lang][key];
-        });
-
-        document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
-            const key = el.dataset.translateKeyPlaceholder;
-            el.placeholder = translations[lang][key];
-        });
-    }
 
     // --- INITIALIZATION ---
     async function initialize() {
-        // Load saved settings
         const savedTheme = localStorage.getItem('theme') || 'light';
         const savedLang = localStorage.getItem('language') || 'en';
         setTheme(savedTheme);
@@ -107,32 +92,84 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/platforms');
             availablePlatforms = await response.json();
-            if (availablePlatforms.length > 0) {
-                selectedPlatform = availablePlatforms[0];
-            }
-            initializePlatformPills();
-            updateActiveMode();
+            initializePlatformSelectors();
         } catch (error) {
             console.error("Failed to fetch platforms:", error);
         }
+        
+        updateActiveMode();
+        loadHistory();
     }
 
-    function initializePlatformPills() {
-        const pillContainers = document.querySelectorAll('.platform-pills');
-        pillContainers.forEach(container => { container.innerHTML = ''; availablePlatforms.forEach(platform => {
-                const pill = document.createElement('div');
-                pill.className = 'platform-pill';
-                pill.textContent = platform;
-                pill.dataset.platform = platform;
-                if (platform === selectedPlatform) {
-                    pill.classList.add('selected');
-                }
-                container.appendChild(pill);
+    // --- THEME & LANGUAGE ---
+    themeToggleButton.addEventListener('click', () => {
+        const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+
+    langToggleButton.addEventListener('click', () => {
+        const newLang = document.documentElement.lang === 'ar' ? 'en' : 'ar';
+        setLanguage(newLang);
+        localStorage.setItem('language', newLang);
+    });
+
+    function setTheme(theme) {
+        document.body.classList.toggle('dark-mode', theme === 'dark');
+        themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌓';
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const html = document.documentElement;
+        html.lang = lang;
+        html.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        langToggleButton.textContent = lang === 'ar' ? 'En' : 'ع';
+
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.dataset.translateKey;
+            if (translations[lang][key]) el.textContent = translations[lang][key];
+        });
+        document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+            const key = el.dataset.translateKeyPlaceholder;
+            if (translations[lang][key]) el.placeholder = translations[lang][key];
+        });
+    }
+
+    // --- UI & FORM LOGIC ---
+    function initializePlatformSelectors() {
+        const selectors = ['smart-platform-selector', 'random-platform-selector'];
+        selectors.forEach(selectorId => {
+            const container = document.getElementById(selectorId);
+            if (!container) return;
+
+            const header = document.createElement('div');
+            header.className = 'platform-selector-header';
+            header.innerHTML = `
+                <label class="select-all-label">
+                    <input type="checkbox" class="select-all-checkbox">
+                    <span data-translate-key="selectAll">${translations[currentLang].selectAll}</span>
+                </label>`;
+            container.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'platform-grid';
+            availablePlatforms.forEach(platform => {
+                const label = document.createElement('label');
+                label.className = 'platform-checkbox-label';
+                label.innerHTML = `<input type="checkbox" name="platform" value="${platform}" checked> ${platform}`;
+                grid.appendChild(label);
+            });
+            container.appendChild(grid);
+
+            container.querySelector('.select-all-checkbox').addEventListener('change', (e) => {
+                container.querySelectorAll('input[name="platform"]').forEach(chk => {
+                    chk.checked = e.target.checked;
+                });
             });
         });
     }
 
-    // --- Event Listeners ---
     modeButtons.forEach(button => {
         button.addEventListener('click', () => {
             activeMode = button.dataset.mode;
@@ -140,47 +177,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll('.platform-pills').forEach(container => {
-        container.addEventListener('click', (e) => {
-            if (e.target.classList.contains('platform-pill')) {
-                selectedPlatform = e.target.dataset.platform;
-                document.querySelectorAll('.platform-pills .platform-pill').forEach(pill => {
-                    pill.classList.toggle('selected', pill.dataset.platform === selectedPlatform);
-                });
-            }
-        });
+    advancedToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        advancedPanel.classList.toggle('active');
+        advancedToggle.textContent = advancedPanel.classList.contains('active') ? 
+            `${translations[currentLang].advancedToggle.replace('▼','▲')} ▲` : 
+            `${translations[currentLang].advancedToggle.replace('▲','▼')} ▼`;
     });
-
-    forms.smart.addEventListener('submit', e => handleFormSubmit(e, 'smart'));
-    forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
-    forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
 
     function updateActiveMode() {
         modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === activeMode));
         Object.values(forms).forEach(form => form.classList.remove('active-form'));
         forms[activeMode].classList.add('active-form');
         resultsContainer.innerHTML = '';
+        statsContainer.innerHTML = '';
     }
 
-    // --- API & RENDERING LOGIC ---
+    // --- API & SUBMISSION ---
+    forms.smart.addEventListener('submit', e => handleFormSubmit(e, 'smart'));
+    forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
+    forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
+
     async function handleFormSubmit(event, mode) {
         event.preventDefault();
         loadingOverlay.style.display = 'flex';
         resultsContainer.innerHTML = '';
+        statsContainer.innerHTML = '';
+        const startTime = Date.now();
 
         let payload = { mode };
+        let selectedPlatforms = [];
+
+        if (mode === 'smart' || mode === 'random') {
+            const selectorId = mode === 'smart' ? 'smart-platform-selector' : 'random-platform-selector';
+            document.querySelectorAll(`#${selectorId} input[name="platform"]:checked`).forEach(chk => {
+                selectedPlatforms.push(chk.value);
+            });
+            if (selectedPlatforms.length === 0) {
+                renderError(new Error("Please select at least one platform."));
+                loadingOverlay.style.display = 'none';
+                return;
+            }
+            payload.platforms = selectedPlatforms;
+        }
 
         if (mode === 'smart') {
             payload.keyword = document.getElementById('keyword').value;
             payload.maxLength = document.getElementById('maxLength').value;
-            payload.platform = selectedPlatform;
+            // Add advanced options to payload if you modify the backend to use them
         } else if (mode === 'matrix') {
             payload.username = document.getElementById('matrix-username').value;
         } else if (mode === 'random') {
             payload.length = document.getElementById('random-length').value;
             payload.count = document.getElementById('random-count').value;
-            payload.platform = selectedPlatform;
         }
+        
+        saveSearchToHistory(payload);
 
         try {
             const response = await fetch('/api/check', {
@@ -195,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            renderResults(data, mode);
+            const endTime = Date.now();
+            renderResults(data, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(data) ? data.length : 0 });
 
         } catch (error) {
             renderError(error);
@@ -204,23 +257,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderResults(data, mode) {
+    // --- RENDERING RESULTS ---
+    function renderResults(data, mode, stats) {
+        renderStats(stats, mode);
         if (mode === 'matrix') {
             renderMatrixResults(data);
         } else {
-            renderListResults(data);
+            renderGroupedListResults(data);
         }
     }
 
-    function renderListResults(usernames) {
-        if (usernames.length === 0) {
+    function renderStats(stats, mode) {
+        if (mode === 'matrix') {
+            statsContainer.innerHTML = '';
+            return;
+        }
+        statsContainer.innerHTML = `
+            <div class="stats-card">
+                <h3>${translations[currentLang].statsTitle}</h3>
+                <p>${translations[currentLang].found} <strong>${stats.count}</strong> ${translations[currentLang].pageSubtitle.toLowerCase().includes('usernames') ? 'usernames' : 'يوزرات'} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p>
+            </div>`;
+    }
+
+    function renderGroupedListResults(results) {
+        if (results.length === 0) {
             resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
             return;
         }
-        usernames.forEach(user => {
+
+        const grouped = results.reduce((acc, { platform, username }) => {
+            if (!acc[username]) acc[username] = [];
+            acc[username].push(platform);
+            return acc;
+        }, {});
+
+        const sortedUsernames = Object.keys(grouped).sort();
+
+        sortedUsernames.forEach(username => {
             const card = document.createElement('div');
             card.className = 'result-card';
-            card.innerHTML = `<span class="username">${user}</span><span class="status-available">${translations[currentLang].available}</span>`;
+            let platformHtml = '';
+            grouped[username].forEach(p => { platformHtml += `<span class="platform-tag">${p}</span>`; });
+            
+            card.innerHTML = `
+                <div class="username-section">
+                    <span class="username">${username}</span>
+                    <div class="platform-tags">${platformHtml}</div>
+                </div>
+                <span class="status-available">${translations[currentLang].available}</span>`;
             resultsContainer.appendChild(card);
         });
     }
@@ -238,7 +322,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderError(error) {
+        statsContainer.innerHTML = '';
         resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
+    }
+
+    // --- HISTORY ---
+    function saveSearchToHistory(payload) {
+        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+        // Avoid saving duplicate consecutive searches
+        if (JSON.stringify(history[0]) === JSON.stringify(payload)) return;
+
+        history.unshift(payload);
+        history = history.slice(0, 5); // Keep last 5 searches
+        localStorage.setItem('searchHistory', JSON.stringify(history));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+        historyContainer.innerHTML = '';
+        if (history.length === 0) return;
+
+        const title = document.createElement('h3');
+        title.textContent = translations[currentLang].historyTitle;
+        historyContainer.appendChild(title);
+
+        history.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            let text = `<strong>${item.mode}:</strong> `;
+            if(item.keyword) text += `${item.keyword}, `;
+            if(item.username) text += `${item.username}, `;
+            if(item.platforms) text += `[${item.platforms.join(', ')}]`;
+            card.innerHTML = text;
+            card.addEventListener('click', () => repopulateForm(item));
+            historyContainer.appendChild(card);
+        });
+    }
+
+    function repopulateForm(item) {
+        activeMode = item.mode;
+        updateActiveMode();
+        if (item.mode === 'smart') {
+            document.getElementById('keyword').value = item.keyword;
+            document.getElementById('maxLength').value = item.maxLength;
+            document.querySelectorAll('#smart-platform-selector input[name="platform"]').forEach(chk => {
+                chk.checked = item.platforms.includes(chk.value);
+            });
+        }
+        // Add similar logic for other modes if needed
     }
 
     // --- Start the application ---

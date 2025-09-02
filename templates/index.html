@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Finder</title>
+    <title>User Finder Pro</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/script.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,49 +20,70 @@
 
     <div class="container">
         <header class="site-header">
-            <h1 data-translate-key="pageTitle">UserFinder</h1>
-            <p data-translate-key="pageSubtitle">The ultimate tool to find your perfect username.</p>
+            <h1 data-translate-key="pageTitle">User Finder Pro</h1>
+            <p data-translate-key="pageSubtitle">Discover available usernames across all major platforms.</p>
         </header>
 
         <div class="mode-selector">
-            <button class="mode-btn active" data-mode="smart" data-translate-key="smartModeBtn">Smart Keyword</button>
+            <button class="mode-btn active" data-mode="smart" data-translate-key="smartModeBtn">Smart Search</button>
             <button class="mode-btn" data-mode="matrix" data-translate-key="matrixModeBtn">Matrix Check</button>
-            <button class="mode-btn" data-mode="random" data-translate-key="randomModeBtn">Random</button>
+            <button class="mode-btn" data-mode="random" data-translate-key="randomModeBtn">Random Finder</button>
         </div>
 
-        <!-- Smart Keyword Mode Form -->
-        <form id="smart-form" class="search-form active-form">
-            <div class="input-group">
-                <input type="text" id="keyword" data-translate-key-placeholder="keywordPlaceholder" placeholder="Enter a keyword (e.g., your name)" required>
-                <input type="number" id="maxLength" data-translate-key-placeholder="maxLengthPlaceholder" placeholder="Max Length" min="3" max="20" value="15">
-            </div>
-            <div class="platform-pills">
-                <!-- Platforms will be injected by JS -->
-            </div>
-            <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
-        </form>
+        <!-- Forms Container -->
+        <div class="form-container">
+            <!-- Smart Search Form -->
+            <form id="smart-form" class="search-form active-form">
+                <div class="input-group">
+                    <input type="text" id="keyword" data-translate-key-placeholder="keywordPlaceholder" placeholder="Enter a keyword..." required>
+                    <input type="number" id="maxLength" data-translate-key-placeholder="maxLengthPlaceholder" placeholder="Max Len" min="3" max="20" value="15">
+                </div>
+                
+                <div id="smart-platform-selector" class="platform-selector">
+                    <!-- Platform checkboxes will be injected by JS -->
+                </div>
 
-        <!-- Matrix Check Mode Form -->
-        <form id="matrix-form" class="search-form">
-            <div class="input-group">
-                <input type="text" id="matrix-username" data-translate-key-placeholder="matrixPlaceholder" placeholder="Enter username to check everywhere" required>
-            </div>
-            <button type="submit" class="submit-btn" data-translate-key="checkAllBtn">Check All Platforms</button>
-        </form>
+                <div class="advanced-options">
+                    <a href="#" id="advanced-toggle" data-translate-key="advancedToggle">Advanced Options ▼</a>
+                    <div id="advanced-panel" class="advanced-panel">
+                        <div class="input-group">
+                            <input type="text" id="startsWith" data-translate-key-placeholder="startsWithPlaceholder" placeholder="Starts with...">
+                            <input type="text" id="endsWith" data-translate-key-placeholder="endsWithPlaceholder" placeholder="Ends with...">
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="includeNumbers" checked> <span data-translate-key="includeNumbersLabel">Numbers</span></label>
+                            <label><input type="checkbox" id="includeLetters" checked> <span data-translate-key="includeLettersLabel">Letters</span></label>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Random Mode Form -->
-        <form id="random-form" class="search-form">
-            <div class="input-group">
-                <input type="number" id="random-length" data-translate-key-placeholder="lengthPlaceholder" placeholder="Length" min="3" max="15" value="5">
-                <input type="number" id="random-count" data-translate-key-placeholder="countPlaceholder" placeholder="How many?" min="1" max="50" value="10">
-            </div>
-            <div class="platform-pills">
-                 <!-- Platforms will be injected by JS -->
-            </div>
-            <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
-        </form>
+                <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
+            </form>
 
+            <!-- Matrix Check Form -->
+            <form id="matrix-form" class="search-form">
+                <div class="input-group">
+                    <input type="text" id="matrix-username" data-translate-key-placeholder="matrixPlaceholder" placeholder="Enter username to check everywhere" required>
+                </div>
+                <button type="submit" class="submit-btn" data-translate-key="checkAllBtn">Check All Platforms</button>
+            </form>
+
+            <!-- Random Finder Form -->
+            <form id="random-form" class="search-form">
+                <div class="input-group">
+                    <input type="number" id="random-length" data-translate-key-placeholder="lengthPlaceholder" placeholder="Length" min="3" max="15" value="5">
+                    <input type="number" id="random-count" data-translate-key-placeholder="countPlaceholder" placeholder="How many?" min="1" max="50" value="10">
+                </div>
+                <div id="random-platform-selector" class="platform-selector">
+                    <!-- Platform checkboxes will be injected by JS -->
+                </div>
+                <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
+            </form>
+        </div>
+
+        <div id="stats-container" class="stats-container"></div>
         <div id="results-container" class="results-container"></div>
+        <div id="history-container" class="history-container"></div>
 
     </div>
 
