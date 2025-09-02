@@ -388,3 +388,178 @@ body.dark-mode .loading-overlay {
     .top-controls { top: 10px; left: 10px; }
     .container { margin-top: 70px; }
 }
+
+.platform-control-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: var(--background-color);
+    color: var(--secondary-text);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.platform-control-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.platform-control-btn.select-all-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border-color: transparent;
+}
+
+/* FAB for AI Assistant */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 12px 30px rgba(0, 122, 255, 0.5);
+}
+
+/* Chat Widget */
+.chat-widget {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 350px;
+    max-width: 90vw;
+    height: 500px;
+    background-color: var(--card-background);
+    border-radius: var(--card-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 999;
+    transform: scale(0.5) translateY(100px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chat-widget.visible {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.chat-header h3 { margin: 0; font-size: 1.1rem; }
+#close-chat-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+
+.chat-body {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chat-message {
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 80%;
+}
+
+.chat-message.bot {
+    background-color: var(--background-color);
+    border-bottom-left-radius: 2px;
+    align-self: flex-start;
+}
+
+.chat-message.user {
+    background-color: var(--accent-color);
+    color: white;
+    border-bottom-right-radius: 2px;
+    align-self: flex-end;
+}
+
+.chat-message p { margin: 0; }
+
+.chat-footer {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+#chat-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    color: var(--primary-text);
+}
+#chat-input:focus { outline: none; }
+
+#send-chat-btn {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.creative-tool-card {
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--card-radius);
+    background-color: var(--card-background);
+    animation: formFadeIn 0.4s ease-out;
+    margin-bottom: 20px; /* Added to give space */
+}
+
+.creative-tool-card .card-title {
+    text-align: center;
+    font-size: 1.5rem;
+    margin: 0 0 5px 0;
+}
+
+.creative-tool-card .card-subtitle {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--secondary-text);
+    margin: 0 0 20px 0;
+}
+
+.forecast-result-area {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    min-height: 20px; /* Reserve space */
+}

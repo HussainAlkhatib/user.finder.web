@@ -2,62 +2,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const translations = {
         en: {
-            pageTitle: 'User Finder Pro',
-            pageSubtitle: 'Discover available usernames across all major platforms.',
+            pageTitle: 'User Finder Ultimate',
+            pageSubtitle: 'Your All-in-One Identity Search.',
             smartModeBtn: 'Smart Search',
             matrixModeBtn: 'Matrix Check',
             randomModeBtn: 'Random Finder',
             keywordPlaceholder: 'Enter a keyword...',
             maxLengthPlaceholder: 'Max Len',
-            findUsernamesBtn: 'Find Usernames',
+            findUsernamesBtn: 'Find Usernames & Domains',
             checkAllBtn: 'Check All Platforms',
-            lengthPlaceholder: 'Length',
-            countPlaceholder: 'How many?',
             footerText: 'Developed By Hussain Alkhatib',
             available: 'Available!',
             taken: 'Taken',
             noUsernamesFound: 'No available usernames found. Try different criteria!',
+            noDomainsFound: 'No available domains found for this keyword.',
             errorOccurred: 'An error occurred: ',
-            advancedToggle: 'Advanced Options',
-            startsWithPlaceholder: 'Starts with...',
-            endsWithPlaceholder: 'Ends with...',
-            includeNumbersLabel: 'Numbers',
-            includeLettersLabel: 'Letters',
             selectAll: 'Select All',
             historyTitle: 'Recent Searches',
             statsTitle: 'Search Complete!',
             found: 'Found',
             in: 'in',
-            seconds: 'seconds'
+            seconds: 'seconds',
+            usernamesTab: 'Usernames',
+            domainsTab: 'Domains',
+            exportBtn: 'Export',
+            quality: 'Quality',
+            deselectAll: 'Deselect All'
         },
         ar: {
-            pageTitle: 'باحث اليوزرات الاحترافي',
-            pageSubtitle: 'اكتشف اليوزرات المتاحة في جميع المنصات الكبرى.',
+            pageTitle: 'باحث الهوية الشامل',
+            pageSubtitle: 'بحثك المتكامل عن الهوية الرقمية.',
             smartModeBtn: 'بحث ذكي',
             matrixModeBtn: 'فحص شامل',
             randomModeBtn: 'بحث عشوائي',
             keywordPlaceholder: 'أدخل كلمة مفتاحية...',
             maxLengthPlaceholder: 'أقصى طول',
-            findUsernamesBtn: 'ابحث عن يوزرات',
+            findUsernamesBtn: 'ابحث عن يوزرات ودومينات',
             checkAllBtn: 'افحص كل المنصات',
-            lengthPlaceholder: 'الطول',
-            countPlaceholder: 'العدد؟',
             footerText: 'تم التطوير بواسطة حسين الخطيب',
             available: 'متاح!',
             taken: 'مأخوذ',
             noUsernamesFound: 'لم يتم العثور على يوزرات. جرب معايير مختلفة!',
+            noDomainsFound: 'لم يتم العثور على دومينات متاحة لهذه الكلمة.',
             errorOccurred: 'حدث خطأ: ',
-            advancedToggle: 'خيارات متقدمة',
-            startsWithPlaceholder: 'يبدأ بـ...',
-            endsWithPlaceholder: 'ينتهي بـ...',
-            includeNumbersLabel: 'أرقام',
-            includeLettersLabel: 'حروف',
             selectAll: 'تحديد الكل',
             historyTitle: 'عمليات البحث الأخيرة',
             statsTitle: 'اكتمل البحث!',
             found: 'تم العثور على',
             in: 'في',
-            seconds: 'ثواني'
+            seconds: 'ثواني',
+            usernamesTab: 'أسماء المستخدمين',
+            domainsTab: 'الدومينات',
+            exportBtn: 'تصدير',
+            quality: 'الجودة',
+            deselectAll: 'إلغاء تحديد الكل'
         }
     };
 
@@ -70,17 +68,21 @@ document.addEventListener('DOMContentLoaded', () => {
         matrix: document.getElementById('matrix-form'),
         random: document.getElementById('random-form')
     };
-    const resultsContainer = document.getElementById('results-container');
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    
+    const resultsArea = document.getElementById('results-area');
     const statsContainer = document.getElementById('stats-container');
     const historyContainer = document.getElementById('history-container');
-    const loadingOverlay = document.querySelector('.loading-overlay');
-    const advancedToggle = document.getElementById('advanced-toggle');
-    const advancedPanel = document.getElementById('advanced-panel');
+    const usernamesResultsContainer = document.getElementById('usernames-results');
+    const domainsResultsContainer = document.getElementById('domains-results');
+    const exportBtn = document.getElementById('export-btn');
+    const tabButtons = document.querySelectorAll('.tab-btn');
 
     // --- State Management ---
     let activeMode = 'smart';
     let availablePlatforms = [];
     let currentLang = 'en';
+    let lastUsernamesResult = [];
 
     // --- INITIALIZATION ---
     async function initialize() {
@@ -99,21 +101,68 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateActiveMode();
         loadHistory();
+        setupEventListeners();
+    }
+
+    // --- EVENT LISTENERS SETUP ---
+    function setupEventListeners() {
+        themeToggleButton.addEventListener('click', () => {
+            const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            setTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        langToggleButton.addEventListener('click', () => {
+            const newLang = document.documentElement.lang === 'ar' ? 'en' : 'ar';
+            setLanguage(newLang);
+            localStorage.setItem('language', newLang);
+        });
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                activeMode = button.dataset.mode;
+                updateActiveMode();
+            });
+        });
+
+        forms.smart.addEventListener('submit', e => handleFormSubmit(e, 'smart'));
+        forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
+        forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                document.querySelectorAll('.results-tab-content').forEach(content => {
+                    content.classList.toggle('active', content.id === targetTab);
+                });
+            });
+        });
+
+        exportBtn.addEventListener('click', exportResults);
+
+        document.getElementById('forecast-button').addEventListener('click', handleForecast);
+    }
+
+    // --- FORECASTING ---
+    function handleForecast() {
+        const input = document.getElementById('forecast-input');
+        const resultArea = document.getElementById('forecast-result');
+        const username = input.value.trim();
+
+        if (!username) {
+            resultArea.textContent = 'Please enter a username.';
+            return;
+        }
+
+        // Placeholder "AI" logic
+        const randomChance = Math.floor(Math.random() * 51) + 50; // 50-100%
+        resultArea.textContent = `There is a ${randomChance}% chance that "${username}" will be taken within a year!`;
+        input.value = '';
     }
 
     // --- THEME & LANGUAGE ---
-    themeToggleButton.addEventListener('click', () => {
-        const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
-
-    langToggleButton.addEventListener('click', () => {
-        const newLang = document.documentElement.lang === 'ar' ? 'en' : 'ar';
-        setLanguage(newLang);
-        localStorage.setItem('language', newLang);
-    });
-
     function setTheme(theme) {
         document.body.classList.toggle('dark-mode', theme === 'dark');
         themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌓';
@@ -121,11 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setLanguage(lang) {
         currentLang = lang;
-        const html = document.documentElement;
-        html.lang = lang;
-        html.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         langToggleButton.textContent = lang === 'ar' ? 'En' : 'ع';
-
         document.querySelectorAll('[data-translate-key]').forEach(el => {
             const key = el.dataset.translateKey;
             if (translations[lang][key]) el.textContent = translations[lang][key];
@@ -142,113 +189,94 @@ document.addEventListener('DOMContentLoaded', () => {
         selectors.forEach(selectorId => {
             const container = document.getElementById(selectorId);
             if (!container) return;
-
-            const header = document.createElement('div');
-            header.className = 'platform-selector-header';
-            header.innerHTML = `
-                <label class="select-all-label">
-                    <input type="checkbox" class="select-all-checkbox">
-                    <span data-translate-key="selectAll">${translations[currentLang].selectAll}</span>
-                </label>`;
-            container.appendChild(header);
-
-            const grid = document.createElement('div');
-            grid.className = 'platform-grid';
+            container.innerHTML = `
+                <div class="platform-selector-header">
+                    <button class="platform-control-btn select-all-btn" data-translate-key="selectAll">${translations[currentLang].selectAll}</button>
+                    <button class="platform-control-btn deselect-all-btn" data-translate-key="deselectAll">${translations[currentLang].deselectAll || 'Deselect All'}</button>
+                </div>
+                <div class="platform-grid"></div>`;
+            const grid = container.querySelector('.platform-grid');
             availablePlatforms.forEach(platform => {
                 const label = document.createElement('label');
                 label.className = 'platform-checkbox-label';
-                label.innerHTML = `<input type="checkbox" name="platform" value="${platform}" checked> ${platform}`;
+                label.innerHTML = `<input type="checkbox" name="platform" value="${platform}" checked><span>${platform}</span>`;
                 grid.appendChild(label);
             });
-            container.appendChild(grid);
-
-            container.querySelector('.select-all-checkbox').addEventListener('change', (e) => {
-                container.querySelectorAll('input[name="platform"]').forEach(chk => {
-                    chk.checked = e.target.checked;
-                });
+            container.querySelector('.select-all-btn').addEventListener('click', () => {
+                container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = true);
+            });
+            container.querySelector('.deselect-all-btn').addEventListener('click', () => {
+                container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = false);
             });
         });
     }
-
-    modeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            activeMode = button.dataset.mode;
-            updateActiveMode();
-        });
-    });
-
-    advancedToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        advancedPanel.classList.toggle('active');
-        advancedToggle.textContent = advancedPanel.classList.contains('active') ? 
-            `${translations[currentLang].advancedToggle.replace('▼','▲')} ▲` : 
-            `${translations[currentLang].advancedToggle.replace('▲','▼')} ▼`;
-    });
 
     function updateActiveMode() {
         modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === activeMode));
         Object.values(forms).forEach(form => form.classList.remove('active-form'));
         forms[activeMode].classList.add('active-form');
-        resultsContainer.innerHTML = '';
-        statsContainer.innerHTML = '';
+        resultsArea.style.display = 'none';
     }
 
     // --- API & SUBMISSION ---
-    forms.smart.addEventListener('submit', e => handleFormSubmit(e, 'smart'));
-    forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
-    forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
-
     async function handleFormSubmit(event, mode) {
         event.preventDefault();
         loadingOverlay.style.display = 'flex';
-        resultsContainer.innerHTML = '';
+        resultsArea.style.display = 'none';
+        usernamesResultsContainer.innerHTML = '';
+        domainsResultsContainer.innerHTML = '';
         statsContainer.innerHTML = '';
         const startTime = Date.now();
 
         let payload = { mode };
-        let selectedPlatforms = [];
+        const keyword = (mode === 'smart') ? document.getElementById('keyword').value : null;
 
         if (mode === 'smart' || mode === 'random') {
             const selectorId = mode === 'smart' ? 'smart-platform-selector' : 'random-platform-selector';
-            document.querySelectorAll(`#${selectorId} input[name="platform"]:checked`).forEach(chk => {
-                selectedPlatforms.push(chk.value);
-            });
+            const selectedPlatforms = Array.from(document.querySelectorAll(`#${selectorId} input[name="platform"]:checked`)).map(chk => chk.value);
             if (selectedPlatforms.length === 0) {
                 renderError(new Error("Please select at least one platform."));
                 loadingOverlay.style.display = 'none';
                 return;
             }
             payload.platforms = selectedPlatforms;
+            if (mode === 'smart') {
+                payload.keyword = keyword;
+                payload.maxLength = document.getElementById('maxLength').value;
+            } else {
+                payload.length = document.getElementById('random-length').value;
+                payload.count = document.getElementById('random-count').value;
+            }
+        } else { // matrix
+            payload.username = document.getElementById('matrix-username').value;
         }
 
-        if (mode === 'smart') {
-            payload.keyword = document.getElementById('keyword').value;
-            payload.maxLength = document.getElementById('maxLength').value;
-            // Add advanced options to payload if you modify the backend to use them
-        } else if (mode === 'matrix') {
-            payload.username = document.getElementById('matrix-username').value;
-        } else if (mode === 'random') {
-            payload.length = document.getElementById('random-length').value;
-            payload.count = document.getElementById('random-count').value;
-        }
-        
         saveSearchToHistory(payload);
 
         try {
-            const response = await fetch('/api/check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            const promises = [];
+            promises.push(fetch('/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
+            if (mode === 'smart' && keyword) {
+                promises.push(fetch('/api/check_domains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword }) }));
             }
 
-            const data = await response.json();
+            const responses = await Promise.all(promises);
+            const [mainResponse, domainsResponse] = responses;
+
+            if (!mainResponse.ok) {
+                const errorData = await mainResponse.json();
+                throw new Error(errorData.error || `HTTP error! status: ${mainResponse.status}`);
+            }
+
+            const mainData = await mainResponse.json();
             const endTime = Date.now();
-            renderResults(data, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(data) ? data.length : 0 });
+            resultsArea.style.display = 'block';
+            renderResults(mainData, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(mainData) ? mainData.length : 0 });
+
+            if (domainsResponse && domainsResponse.ok) {
+                const domainsData = await domainsResponse.json();
+                renderDomainResults(domainsData);
+            }
 
         } catch (error) {
             renderError(error);
@@ -257,12 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- RENDERING RESULTS ---
+    // ---RENDERING ---
     function renderResults(data, mode, stats) {
         renderStats(stats, mode);
         if (mode === 'matrix') {
             renderMatrixResults(data);
         } else {
+            lastUsernamesResult = data; // Save for export
             renderGroupedListResults(data);
         }
     }
@@ -272,44 +301,63 @@ document.addEventListener('DOMContentLoaded', () => {
             statsContainer.innerHTML = '';
             return;
         }
-        statsContainer.innerHTML = `
-            <div class="stats-card">
-                <h3>${translations[currentLang].statsTitle}</h3>
-                <p>${translations[currentLang].found} <strong>${stats.count}</strong> ${translations[currentLang].pageSubtitle.toLowerCase().includes('usernames') ? 'usernames' : 'يوزرات'} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p>
-            </div>`;
+        statsContainer.innerHTML = `<div class="stats-card"><h3>${translations[currentLang].statsTitle}</h3><p>${translations[currentLang].found} <strong>${stats.count}</strong> ${currentLang === 'ar' ? 'يوزرات' : 'usernames'} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p></div>`;
     }
 
     function renderGroupedListResults(results) {
+        usernamesResultsContainer.innerHTML = '';
         if (results.length === 0) {
-            resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
+            usernamesResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
             return;
         }
-
-        const grouped = results.reduce((acc, { platform, username }) => {
-            if (!acc[username]) acc[username] = [];
-            acc[username].push(platform);
+        const grouped = results.reduce((acc, { platform, username, quality }) => {
+            if (!acc[username]) acc[username] = { platforms: [], quality: quality };
+            acc[username].platforms.push(platform);
             return acc;
         }, {});
 
-        const sortedUsernames = Object.keys(grouped).sort();
+        const sortedUsernames = Object.keys(grouped).sort((a, b) => grouped[b].quality - grouped[a].quality || a.localeCompare(b));
 
         sortedUsernames.forEach(username => {
+            const { platforms, quality } = grouped[username];
             const card = document.createElement('div');
             card.className = 'result-card';
-            let platformHtml = '';
-            grouped[username].forEach(p => { platformHtml += `<span class="platform-tag">${p}</span>`; });
-            
+            const platformHtml = platforms.map(p => `<span class="platform-tag">${p}</span>`).join('');
             card.innerHTML = `
                 <div class="username-section">
                     <span class="username">${username}</span>
                     <div class="platform-tags">${platformHtml}</div>
                 </div>
-                <span class="status-available">${translations[currentLang].available}</span>`;
-            resultsContainer.appendChild(card);
+                <div class="quality-section">
+                    <span class="quality-text">${translations[currentLang].quality}</span>
+                    <div class="stars">
+                        ${'★'.repeat(quality)}
+                        ${'☆'.repeat(5 - quality)}
+                    </div>
+                </div>`;
+            usernamesResultsContainer.appendChild(card);
+        });
+    }
+
+    function renderDomainResults(domains) {
+        domainsResultsContainer.innerHTML = '';
+        const sortedDomains = Object.entries(domains).sort((a, b) => a[0].localeCompare(b[0]));
+        if (sortedDomains.every(d => !d[1])) {
+            domainsResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noDomainsFound}</p></div>`;
+            return;
+        }
+        sortedDomains.forEach(([domain, isAvailable]) => {
+            const card = document.createElement('div');
+            card.className = 'matrix-result-card';
+            const statusClass = isAvailable ? 'status-available' : 'status-taken';
+            const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
+            card.innerHTML = `<span class="platform-name">${domain}</span><span class="${statusClass}">${statusText}</span>`;
+            domainsResultsContainer.appendChild(card);
         });
     }
 
     function renderMatrixResults(platforms) {
+        usernamesResultsContainer.innerHTML = '';
         const sortedPlatforms = Object.entries(platforms).sort((a, b) => a[0].localeCompare(b[0]));
         sortedPlatforms.forEach(([platform, isAvailable]) => {
             const card = document.createElement('div');
@@ -317,23 +365,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusClass = isAvailable ? 'status-available' : 'status-taken';
             const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
             card.innerHTML = `<span class="platform-name">${platform}</span><span class="${statusClass}">${statusText}</span>`;
-            resultsContainer.appendChild(card);
+            usernamesResultsContainer.appendChild(card);
         });
     }
 
     function renderError(error) {
+        resultsArea.style.display = 'block';
         statsContainer.innerHTML = '';
-        resultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
+        usernamesResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
     }
 
-    // --- HISTORY ---
+    // --- HISTORY & EXPORT ---
     function saveSearchToHistory(payload) {
         let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-        // Avoid saving duplicate consecutive searches
         if (JSON.stringify(history[0]) === JSON.stringify(payload)) return;
-
         history.unshift(payload);
-        history = history.slice(0, 5); // Keep last 5 searches
+        history = history.slice(0, 5);
         localStorage.setItem('searchHistory', JSON.stringify(history));
         loadHistory();
     }
@@ -342,11 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
         historyContainer.innerHTML = '';
         if (history.length === 0) return;
-
         const title = document.createElement('h3');
         title.textContent = translations[currentLang].historyTitle;
         historyContainer.appendChild(title);
-
         history.forEach(item => {
             const card = document.createElement('div');
             card.className = 'history-card';
@@ -370,9 +415,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 chk.checked = item.platforms.includes(chk.value);
             });
         }
-        // Add similar logic for other modes if needed
+    }
+
+    function exportResults() {
+        if (lastUsernamesResult.length === 0) {
+            alert("No results to export.");
+            return;
+        }
+        const grouped = lastUsernamesResult.reduce((acc, { platform, username, quality }) => {
+            if (!acc[username]) acc[username] = { platforms: [], quality: quality };
+            acc[username].platforms.push(platform);
+            return acc;
+        }, {});
+        let textContent = "Available Usernames Report\n============================\n\n";
+        Object.entries(grouped).forEach(([username, { platforms, quality }]) => {
+            textContent += `Username: ${username}\n`;
+            textContent += `Quality: ${'★'.repeat(quality)}${'☆'.repeat(5 - quality)}\n`;
+            textContent += `Available on: ${platforms.join(', ')}\n\n`;
+        });
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const anchor = document.createElement('a');
+        anchor.download = 'user-finder-results.txt';
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.click();
+        window.URL.revokeObjectURL(anchor.href);
     }
 
     // --- Start the application ---
     initialize();
+
+    // --- NAJM AI Chat Widget Logic ---
+    const najmAiButton = document.getElementById('najm-ai-button');
+    const closeChatButton = document.getElementById('close-chat-btn');
+    const chatWidget = document.getElementById('najm-chat-widget');
+
+    if (najmAiButton && closeChatButton && chatWidget) {
+        najmAiButton.addEventListener('click', () => {
+            chatWidget.classList.toggle('visible');
+        });
+
+        closeChatButton.addEventListener('click', () => {
+            chatWidget.classList.remove('visible');
+        });
+    }
 });

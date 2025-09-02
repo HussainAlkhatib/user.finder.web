@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Finder Pro</title>
+    <title>User Finder Ultimate</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/script.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,8 +20,8 @@
 
     <div class="container">
         <header class="site-header">
-            <h1 data-translate-key="pageTitle">User Finder Pro</h1>
-            <p data-translate-key="pageSubtitle">Discover available usernames across all major platforms.</p>
+            <h1 data-translate-key="pageTitle">User Finder Ultimate</h1>
+            <p data-translate-key="pageSubtitle">Your All-in-One Identity Search.</p>
         </header>
 
         <div class="mode-selector">
@@ -30,37 +30,29 @@
             <button class="mode-btn" data-mode="random" data-translate-key="randomModeBtn">Random Finder</button>
         </div>
 
-        <!-- Forms Container -->
+        <section class="card creative-tool-card">
+            <h3 class="card-title">🔮 Username Forecast</h3>
+            <p class="card-subtitle">Predict the future availability of a username.</p>
+            <div class="input-group">
+                <input type="text" id="forecast-input" placeholder="Enter username to forecast...">
+                <button id="forecast-button" class="submit-btn">Forecast</button>
+            </div>
+            <div id="forecast-result" class="forecast-result-area"></div>
+        </section>
+
         <div class="form-container">
-            <!-- Smart Search Form -->
             <form id="smart-form" class="search-form active-form">
                 <div class="input-group">
                     <input type="text" id="keyword" data-translate-key-placeholder="keywordPlaceholder" placeholder="Enter a keyword..." required>
                     <input type="number" id="maxLength" data-translate-key-placeholder="maxLengthPlaceholder" placeholder="Max Len" min="3" max="20" value="15">
                 </div>
-                
-                <div id="smart-platform-selector" class="platform-selector">
-                    <!-- Platform checkboxes will be injected by JS -->
+                <div class="input-group">
+                    <select id="vibe-selector" class="vibe-selector"></select>
                 </div>
-
-                <div class="advanced-options">
-                    <a href="#" id="advanced-toggle" data-translate-key="advancedToggle">Advanced Options ▼</a>
-                    <div id="advanced-panel" class="advanced-panel">
-                        <div class="input-group">
-                            <input type="text" id="startsWith" data-translate-key-placeholder="startsWithPlaceholder" placeholder="Starts with...">
-                            <input type="text" id="endsWith" data-translate-key-placeholder="endsWithPlaceholder" placeholder="Ends with...">
-                        </div>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" id="includeNumbers" checked> <span data-translate-key="includeNumbersLabel">Numbers</span></label>
-                            <label><input type="checkbox" id="includeLetters" checked> <span data-translate-key="includeLettersLabel">Letters</span></label>
-                        </div>
-                    </div>
-                </div>
-
+                <div id="smart-platform-selector" class="platform-selector"></div>
                 <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
             </form>
 
-            <!-- Matrix Check Form -->
             <form id="matrix-form" class="search-form">
                 <div class="input-group">
                     <input type="text" id="matrix-username" data-translate-key-placeholder="matrixPlaceholder" placeholder="Enter username to check everywhere" required>
@@ -68,23 +60,31 @@
                 <button type="submit" class="submit-btn" data-translate-key="checkAllBtn">Check All Platforms</button>
             </form>
 
-            <!-- Random Finder Form -->
             <form id="random-form" class="search-form">
                 <div class="input-group">
                     <input type="number" id="random-length" data-translate-key-placeholder="lengthPlaceholder" placeholder="Length" min="3" max="15" value="5">
                     <input type="number" id="random-count" data-translate-key-placeholder="countPlaceholder" placeholder="How many?" min="1" max="50" value="10">
                 </div>
-                <div id="random-platform-selector" class="platform-selector">
-                    <!-- Platform checkboxes will be injected by JS -->
-                </div>
+                <div id="random-platform-selector" class="platform-selector"></div>
                 <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
             </form>
         </div>
 
-        <div id="stats-container" class="stats-container"></div>
-        <div id="results-container" class="results-container"></div>
-        <div id="history-container" class="history-container"></div>
+        <!-- Results Area -->
+        <div id="results-area" class="results-area" style="display: none;">
+            <div class="results-header">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="usernames-results" data-translate-key="usernamesTab">Usernames</button>
+                    <button class="tab-btn" data-tab="domains-results" data-translate-key="domainsTab">Domains</button>
+                </div>
+                <button id="export-btn" class="control-btn" data-translate-key="exportBtn">Export</button>
+            </div>
+            <div id="stats-container" class="stats-container"></div>
+            <div id="usernames-results" class="results-tab-content active"></div>
+            <div id="domains-results" class="results-tab-content"></div>
+        </div>
 
+        <div id="history-container" class="history-container"></div>
     </div>
 
     <div class="loading-overlay">
@@ -94,6 +94,25 @@
     <footer class="site-footer-credit">
         <p data-translate-key="footerText">Developed By Hussain Alkhatib</p>
     </footer>
+
+    <div id="najm-chat-widget" class="chat-widget">
+        <div class="chat-header">
+            <h3>✨ المساعد نجم</h3>
+            <button id="close-chat-btn">&times;</button>
+        </div>
+        <div class="chat-body">
+            <!-- Chat messages will go here -->
+            <div class="chat-message bot">
+                <p>أهلاً بك! أنا نجم، مساعدك الذكي. كيف يمكنني المساعدة في العثور على هويتك الرقمية المثالية اليوم؟</p>
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="اسأل نجم...">
+            <button id="send-chat-btn">أرسل</button>
+        </div>
+    </div>
+
+    <button id="najm-ai-button" class="fab">✨</button>
 
 </body>
 </html>
