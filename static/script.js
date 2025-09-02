@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const translations = {
         en: {
-            pageTitle: 'User Finder Ultimate',
-            pageSubtitle: 'Your All-in-One Identity Search.',
+            pageTitle: 'User Finder',
+            pageSubtitle: 'All in One web.',
             smartModeBtn: 'Smart Search',
             matrixModeBtn: 'Matrix Check',
             randomModeBtn: 'Random Finder',
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
             deselectAll: 'Deselect All'
         },
         ar: {
-            pageTitle: 'باحث الهوية الشامل',
-            pageSubtitle: 'بحثك المتكامل عن الهوية الرقمية.',
+            pageTitle: 'باحث اليوزرات',
+            pageSubtitle: 'الكل في واحد.',
             smartModeBtn: 'بحث ذكي',
             matrixModeBtn: 'فحص شامل',
             randomModeBtn: 'بحث عشوائي',
@@ -55,7 +55,15 @@ document.addEventListener('DOMContentLoaded', () => {
             domainsTab: 'الدومينات',
             exportBtn: 'تصدير',
             quality: 'الجودة',
-            deselectAll: 'إلغاء تحديد الكل'
+            deselectAll: 'إلغاء تحديد الكل',
+            forecastTitle: '🔮 توقع اسم المستخدم',
+            forecastSubtitle: 'تنبأ بمدى توفر اسم المستخدم في المستقبل.',
+            forecastPlaceholder: 'أدخل اسم مستخدم للتوقع...',
+            forecastButton: 'توقّع',
+            domainModeBtn: 'بحث النطاقات',
+            forecastModeBtn: 'وضع التوقع',
+            domainPlaceholder: 'أدخل كلمة مفتاحية للنطاقات...',
+            domainFindBtn: 'ابحث عن نطاقات'
         }
     };
 
@@ -66,17 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const forms = {
         smart: document.getElementById('smart-form'),
         matrix: document.getElementById('matrix-form'),
-        random: document.getElementById('random-form')
+        domain: document.getElementById('domain-form'),
+        forecast: document.getElementById('forecast-form')
     };
     const loadingOverlay = document.querySelector('.loading-overlay');
     
     const resultsArea = document.getElementById('results-area');
     const statsContainer = document.getElementById('stats-container');
+    const resultsContent = document.getElementById('results-content');
     const historyContainer = document.getElementById('history-container');
-    const usernamesResultsContainer = document.getElementById('usernames-results');
-    const domainsResultsContainer = document.getElementById('domains-results');
     const exportBtn = document.getElementById('export-btn');
-    const tabButtons = document.querySelectorAll('.tab-btn');
 
     // --- State Management ---
     let activeMode = 'smart';
@@ -125,41 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        forms.smart.addEventListener('submit', e => handleFormSubmit(e, 'smart'));
-        forms.matrix.addEventListener('submit', e => handleFormSubmit(e, 'matrix'));
-        forms.random.addEventListener('submit', e => handleFormSubmit(e, 'random'));
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetTab = button.dataset.tab;
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                document.querySelectorAll('.results-tab-content').forEach(content => {
-                    content.classList.toggle('active', content.id === targetTab);
-                });
-            });
-        });
-
-        exportBtn.addEventListener('click', exportResults);
-
-        document.getElementById('forecast-button').addEventListener('click', handleForecast);
-    }
-
-    // --- FORECASTING ---
-    function handleForecast() {
-        const input = document.getElementById('forecast-input');
-        const resultArea = document.getElementById('forecast-result');
-        const username = input.value.trim();
-
-        if (!username) {
-            resultArea.textContent = 'Please enter a username.';
-            return;
+        for (const mode in forms) {
+            if (forms[mode]) {
+                forms[mode].addEventListener('submit', e => handleFormSubmit(e, mode));
+            }
         }
 
-        // Placeholder "AI" logic
-        const randomChance = Math.floor(Math.random() * 51) + 50; // 50-100%
-        resultArea.textContent = `There is a ${randomChance}% chance that "${username}" will be taken within a year!`;
-        input.value = '';
+        exportBtn.addEventListener('click', exportResults);
     }
 
     // --- THEME & LANGUAGE ---
@@ -185,36 +164,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- UI & FORM LOGIC ---
     function initializePlatformSelectors() {
-        const selectors = ['smart-platform-selector', 'random-platform-selector'];
-        selectors.forEach(selectorId => {
-            const container = document.getElementById(selectorId);
-            if (!container) return;
-            container.innerHTML = `
-                <div class="platform-selector-header">
-                    <button class="platform-control-btn select-all-btn" data-translate-key="selectAll">${translations[currentLang].selectAll}</button>
-                    <button class="platform-control-btn deselect-all-btn" data-translate-key="deselectAll">${translations[currentLang].deselectAll || 'Deselect All'}</button>
-                </div>
-                <div class="platform-grid"></div>`;
-            const grid = container.querySelector('.platform-grid');
-            availablePlatforms.forEach(platform => {
-                const label = document.createElement('label');
-                label.className = 'platform-checkbox-label';
-                label.innerHTML = `<input type="checkbox" name="platform" value="${platform}" checked><span>${platform}</span>`;
-                grid.appendChild(label);
-            });
-            container.querySelector('.select-all-btn').addEventListener('click', () => {
-                container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = true);
-            });
-            container.querySelector('.deselect-all-btn').addEventListener('click', () => {
-                container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = false);
-            });
+        const container = document.getElementById('smart-platform-selector');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="platform-selector-header">
+                <button class="platform-control-btn select-all-btn" data-translate-key="selectAll">${translations[currentLang].selectAll}</button>
+                <button class="platform-control-btn deselect-all-btn" data-translate-key="deselectAll">${translations[currentLang].deselectAll || 'Deselect All'}</button>
+            </div>
+            <div class="platform-grid"></div>`;
+        const grid = container.querySelector('.platform-grid');
+        availablePlatforms.forEach(platform => {
+            const label = document.createElement('label');
+            label.className = 'platform-checkbox-label';
+            label.innerHTML = `<input type="checkbox" name="platform" value="${platform}" checked><span>${platform}</span>`;
+            grid.appendChild(label);
+        });
+        container.querySelector('.select-all-btn').addEventListener('click', () => {
+            container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = true);
+        });
+        container.querySelector('.deselect-all-btn').addEventListener('click', () => {
+            container.querySelectorAll('input[name="platform"]').forEach(chk => chk.checked = false);
         });
     }
 
     function updateActiveMode() {
         modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === activeMode));
         Object.values(forms).forEach(form => form.classList.remove('active-form'));
-        forms[activeMode].classList.add('active-form');
+        if (forms[activeMode]) {
+            forms[activeMode].classList.add('active-form');
+        }
         resultsArea.style.display = 'none';
     }
 
@@ -223,60 +201,54 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         loadingOverlay.style.display = 'flex';
         resultsArea.style.display = 'none';
-        usernamesResultsContainer.innerHTML = '';
-        domainsResultsContainer.innerHTML = '';
+        resultsContent.innerHTML = '';
         statsContainer.innerHTML = '';
         const startTime = Date.now();
 
         let payload = { mode };
-        const keyword = (mode === 'smart') ? document.getElementById('keyword').value : null;
 
-        if (mode === 'smart' || mode === 'random') {
-            const selectorId = mode === 'smart' ? 'smart-platform-selector' : 'random-platform-selector';
-            const selectedPlatforms = Array.from(document.querySelectorAll(`#${selectorId} input[name="platform"]:checked`)).map(chk => chk.value);
-            if (selectedPlatforms.length === 0) {
-                renderError(new Error("Please select at least one platform."));
-                loadingOverlay.style.display = 'none';
-                return;
+        // Handle forecast mode separately as it's frontend-only
+        if (mode === 'forecast') {
+            const input = document.getElementById('forecast-input');
+            const username = input.value.trim();
+            if (username) {
+                renderForecastResult(username);
+                saveSearchToHistory({ mode, username });
             }
-            payload.platforms = selectedPlatforms;
-            if (mode === 'smart') {
-                payload.keyword = keyword;
-                payload.maxLength = document.getElementById('maxLength').value;
-            } else {
-                payload.length = document.getElementById('random-length').value;
-                payload.count = document.getElementById('random-count').value;
-            }
-        } else { // matrix
+            loadingOverlay.style.display = 'none';
+            return;
+        }
+
+        // Setup payload for backend modes
+        if (mode === 'smart') {
+            payload.keyword = document.getElementById('keyword').value;
+            payload.maxLength = document.getElementById('maxLength').value;
+            payload.platforms = Array.from(document.querySelectorAll(`#smart-platform-selector input[name="platform"]:checked`)).map(chk => chk.value);
+        } else if (mode === 'matrix') {
             payload.username = document.getElementById('matrix-username').value;
+        } else if (mode === 'domain') {
+            payload.keyword = document.getElementById('domain-keyword').value;
         }
 
         saveSearchToHistory(payload);
 
         try {
-            const promises = [];
-            promises.push(fetch('/api/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
-            if (mode === 'smart' && keyword) {
-                promises.push(fetch('/api/check_domains', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword }) }));
+            const endpoint = (mode === 'domain') ? '/api/check_domains' : '/api/check';
+            const response = await fetch(endpoint, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
 
-            const responses = await Promise.all(promises);
-            const [mainResponse, domainsResponse] = responses;
-
-            if (!mainResponse.ok) {
-                const errorData = await mainResponse.json();
-                throw new Error(errorData.error || `HTTP error! status: ${mainResponse.status}`);
-            }
-
-            const mainData = await mainResponse.json();
+            const data = await response.json();
             const endTime = Date.now();
             resultsArea.style.display = 'block';
-            renderResults(mainData, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(mainData) ? mainData.length : 0 });
-
-            if (domainsResponse && domainsResponse.ok) {
-                const domainsData = await domainsResponse.json();
-                renderDomainResults(domainsData);
-            }
+            renderResults(data, mode, { time: ((endTime - startTime) / 1000).toFixed(2), count: Array.isArray(data) ? data.length : Object.keys(data).length });
 
         } catch (error) {
             renderError(error);
@@ -288,26 +260,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---RENDERING ---
     function renderResults(data, mode, stats) {
         renderStats(stats, mode);
-        if (mode === 'matrix') {
-            renderMatrixResults(data);
-        } else {
+        resultsContent.innerHTML = ''; // Clear previous results
+
+        if (mode === 'smart') {
             lastUsernamesResult = data; // Save for export
             renderGroupedListResults(data);
+        } else if (mode === 'matrix') {
+            renderMatrixResults(data);
+        } else if (mode === 'domain') {
+            renderDomainResults(data);
         }
     }
 
     function renderStats(stats, mode) {
-        if (mode === 'matrix') {
+        if (mode === 'matrix' || mode === 'forecast') {
             statsContainer.innerHTML = '';
             return;
         }
-        statsContainer.innerHTML = `<div class="stats-card"><h3>${translations[currentLang].statsTitle}</h3><p>${translations[currentLang].found} <strong>${stats.count}</strong> ${currentLang === 'ar' ? 'يوزرات' : 'usernames'} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p></div>`;
+        const itemType = mode === 'domain' ? (currentLang === 'ar' ? 'نطاقات' : 'domains') : (currentLang === 'ar' ? 'يوزرات' : 'usernames');
+        statsContainer.innerHTML = `<div class="stats-card"><h3>${translations[currentLang].statsTitle}</h3><p>${translations[currentLang].found} <strong>${stats.count}</strong> ${itemType} ${translations[currentLang].in} ${stats.time} ${translations[currentLang].seconds}.</p></div>`;
     }
 
     function renderGroupedListResults(results) {
-        usernamesResultsContainer.innerHTML = '';
         if (results.length === 0) {
-            usernamesResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
+            resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noUsernamesFound}</p></div>`;
             return;
         }
         const grouped = results.reduce((acc, { platform, username, quality }) => {
@@ -335,29 +311,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${'☆'.repeat(5 - quality)}
                     </div>
                 </div>`;
-            usernamesResultsContainer.appendChild(card);
+            resultsContent.appendChild(card);
         });
     }
 
     function renderDomainResults(domains) {
-        domainsResultsContainer.innerHTML = '';
         const sortedDomains = Object.entries(domains).sort((a, b) => a[0].localeCompare(b[0]));
-        if (sortedDomains.every(d => !d[1])) {
-            domainsResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noDomainsFound}</p></div>`;
+        if (sortedDomains.length === 0 || sortedDomains.every(d => !d[1])) {
+            resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].noDomainsFound}</p></div>`;
             return;
         }
         sortedDomains.forEach(([domain, isAvailable]) => {
+            if (!isAvailable) return; // Only show available domains
             const card = document.createElement('div');
             card.className = 'matrix-result-card';
-            const statusClass = isAvailable ? 'status-available' : 'status-taken';
-            const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
+            const statusClass = 'status-available';
+            const statusText = translations[currentLang].available;
             card.innerHTML = `<span class="platform-name">${domain}</span><span class="${statusClass}">${statusText}</span>`;
-            domainsResultsContainer.appendChild(card);
+            resultsContent.appendChild(card);
         });
     }
 
     function renderMatrixResults(platforms) {
-        usernamesResultsContainer.innerHTML = '';
         const sortedPlatforms = Object.entries(platforms).sort((a, b) => a[0].localeCompare(b[0]));
         sortedPlatforms.forEach(([platform, isAvailable]) => {
             const card = document.createElement('div');
@@ -365,14 +340,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusClass = isAvailable ? 'status-available' : 'status-taken';
             const statusText = isAvailable ? translations[currentLang].available : translations[currentLang].taken;
             card.innerHTML = `<span class="platform-name">${platform}</span><span class="${statusClass}">${statusText}</span>`;
-            usernamesResultsContainer.appendChild(card);
+            resultsContent.appendChild(card);
         });
+    }
+    
+    function renderForecastResult(username) {
+        resultsArea.style.display = 'block';
+        statsContainer.innerHTML = '';
+        const randomChance = Math.floor(Math.random() * 51) + 50; // 50-100%
+        const text = `There is a ${randomChance}% chance that "${username}" will be taken within a year!`;
+        resultsContent.innerHTML = `<div class="result-card"><p class="status-available">${text}</p></div>`;
     }
 
     function renderError(error) {
         resultsArea.style.display = 'block';
         statsContainer.innerHTML = '';
-        usernamesResultsContainer.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
+        resultsContent.innerHTML = `<div class="result-card"><p class="status-taken">${translations[currentLang].errorOccurred}${error.message}</p></div>`;
     }
 
     // --- HISTORY & EXPORT ---
@@ -414,6 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('#smart-platform-selector input[name="platform"]').forEach(chk => {
                 chk.checked = item.platforms.includes(chk.value);
             });
+        } else if (item.mode === 'matrix') {
+            document.getElementById('matrix-username').value = item.username;
+        } else if (item.mode === 'domain') {
+            document.getElementById('domain-keyword').value = item.keyword;
+        } else if (item.mode === 'forecast') {
+            document.getElementById('forecast-input').value = item.username;
         }
     }
 
@@ -456,6 +445,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         closeChatButton.addEventListener('click', () => {
             chatWidget.classList.remove('visible');
+        });
+
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat-btn');
+        const chatBody = document.querySelector('.chat-widget .chat-body');
+
+        const handleChatMessage = async () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Render user message
+            appendMessage(message, 'user');
+            chatInput.value = '';
+
+            // Show typing indicator
+            const typingIndicator = appendMessage('...', 'bot', true);
+
+            // Call API
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                typingIndicator.remove(); // Remove typing indicator
+                appendMessage(data.reply, 'bot'); // Render bot reply
+            } catch (error) {
+                typingIndicator.remove();
+                appendMessage("Sorry, I'm having trouble connecting. Please try again later.", 'bot');
+            }
+        };
+
+        const appendMessage = (text, type, isTyping = false) => {
+            const messageElement = document.createElement('div');
+            messageElement.className = `chat-message ${type}`;
+            if (isTyping) {
+                messageElement.classList.add('typing');
+            }
+            messageElement.innerHTML = `<p>${text}</p>`;
+            chatBody.appendChild(messageElement);
+            chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom
+            return messageElement;
+        };
+
+        sendChatButton.addEventListener('click', handleChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleChatMessage();
+            }
         });
     }
 });

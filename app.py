@@ -88,5 +88,22 @@ def api_check():
         app.logger.error(f"An unexpected error occurred: {e}")
         return jsonify({"error": "An internal server error occurred."}), 500
 
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    data = request.json
+    message = data.get('message', '').lower()
+
+    # Simple rule-based responses
+    if 'suggest' in message or 'username' in message or 'name' in message:
+        reply = "I can help with that! Try using the 'Smart Search' mode. Just enter a keyword and I can generate some ideas for you."
+    elif 'hello' in message or 'hi' in message:
+        reply = "Hello! How can I assist you in finding the perfect username today?"
+    elif 'domain' in message:
+        reply = "Looking for a domain? Switch to the 'Domain Search' mode to check for available domains based on your keyword."
+    else:
+        reply = "I can help you find available usernames and domains. Try asking me for suggestions or use one of the search modes!"
+    
+    return jsonify({"reply": reply})
+
 if __name__ == '__main__':
     app.run(debug=True)

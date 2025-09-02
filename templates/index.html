@@ -27,18 +27,9 @@
         <div class="mode-selector">
             <button class="mode-btn active" data-mode="smart" data-translate-key="smartModeBtn">Smart Search</button>
             <button class="mode-btn" data-mode="matrix" data-translate-key="matrixModeBtn">Matrix Check</button>
-            <button class="mode-btn" data-mode="random" data-translate-key="randomModeBtn">Random Finder</button>
+            <button class="mode-btn" data-mode="domain" data-translate-key="domainModeBtn">Domain Search</button>
+            <button class="mode-btn" data-mode="forecast" data-translate-key="forecastModeBtn">Forecast</button>
         </div>
-
-        <section class="card creative-tool-card">
-            <h3 class="card-title">🔮 Username Forecast</h3>
-            <p class="card-subtitle">Predict the future availability of a username.</p>
-            <div class="input-group">
-                <input type="text" id="forecast-input" placeholder="Enter username to forecast...">
-                <button id="forecast-button" class="submit-btn">Forecast</button>
-            </div>
-            <div id="forecast-result" class="forecast-result-area"></div>
-        </section>
 
         <div class="form-container">
             <form id="smart-form" class="search-form active-form">
@@ -60,28 +51,29 @@
                 <button type="submit" class="submit-btn" data-translate-key="checkAllBtn">Check All Platforms</button>
             </form>
 
-            <form id="random-form" class="search-form">
+            <form id="domain-form" class="search-form">
                 <div class="input-group">
-                    <input type="number" id="random-length" data-translate-key-placeholder="lengthPlaceholder" placeholder="Length" min="3" max="15" value="5">
-                    <input type="number" id="random-count" data-translate-key-placeholder="countPlaceholder" placeholder="How many?" min="1" max="50" value="10">
+                    <input type="text" id="domain-keyword" data-translate-key-placeholder="domainPlaceholder" placeholder="Enter keyword to find domains (e.g., 'gemini')" required>
                 </div>
-                <div id="random-platform-selector" class="platform-selector"></div>
-                <button type="submit" class="submit-btn" data-translate-key="findUsernamesBtn">Find Usernames</button>
+                <button type="submit" class="submit-btn" data-translate-key="domainFindBtn">Find Domains</button>
+            </form>
+
+            <form id="forecast-form" class="search-form">
+                <div class="input-group">
+                    <input type="text" id="forecast-input" data-translate-key-placeholder="forecastPlaceholder" placeholder="Enter username to forecast..." required>
+                </div>
+                <button type="submit" class="submit-btn" data-translate-key="forecastButton">Forecast</button>
             </form>
         </div>
 
         <!-- Results Area -->
         <div id="results-area" class="results-area" style="display: none;">
             <div class="results-header">
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="usernames-results" data-translate-key="usernamesTab">Usernames</button>
-                    <button class="tab-btn" data-tab="domains-results" data-translate-key="domainsTab">Domains</button>
-                </div>
+                <h3 id="results-title">Results</h3>
                 <button id="export-btn" class="control-btn" data-translate-key="exportBtn">Export</button>
             </div>
             <div id="stats-container" class="stats-container"></div>
-            <div id="usernames-results" class="results-tab-content active"></div>
-            <div id="domains-results" class="results-tab-content"></div>
+            <div id="results-content" class="results-content"></div>
         </div>
 
         <div id="history-container" class="history-container"></div>
